@@ -1,6 +1,8 @@
-// backend/middleware/authMiddleware.js
+const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = "YourSuperSecureSecretKeyThatMustBeLong"; // Dapat KAPAREHO ng nasa auth.js
+dotenv.config();
+const JWT_SECRET = process.env.JWT_SECRET; 
+
 
 const protect = (allowedRoles) => (req, res, next) => {
     let token;
