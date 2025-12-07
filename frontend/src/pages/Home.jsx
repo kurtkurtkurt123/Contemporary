@@ -19,14 +19,6 @@ const Home = () => {
     const navigate = useNavigate();
     const { user, logout, isAuthenticated, isAuthReady } = useAuth(); 
 
-    // ❌ TANGGALIN ITO: Ang logic na ito ay nagre-redirect sa login page at sanhi ng loop
-    /* useEffect(() => {
-        if (isAuthReady && !isAuthenticated) {
-             navigate("/login");
-        }
-    }, [isAuthenticated, isAuthReady, navigate]); */
-
-
     // --- FUNCTION 1: CONDITIONAL NAVBAR RENDERING ---
     const renderNavBar = () => {
         if (!user) return null;
@@ -59,7 +51,7 @@ const Home = () => {
     };
 
 
-    // ✅ Tiyakin na naka-login na at may user object
+    
     if (!isAuthenticated || !user || !isAuthReady) { 
          // Kung hindi pa ready, magpakita ng loading screen
          return (
