@@ -1,101 +1,80 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const router = express.Router();
-const db = require("../config/mysql.js"); // Import ng database connection (dapat ito ang tamang path)
-const bcrypt = require("bcrypt"); // Para sa password hashing
-const jwt = require("jsonwebtoken"); // Para sa token generation
+const db = require("../config/mysql.js");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 dotenv.config();
-
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // ==========================
-// REGISTER USER (Student/Instructor Only)
+// REGISTER USER
 // ==========================
 router.post("/register", async (req, res) => {
     try {
         const {
-            StudentID, LastName, FirstName, MI, EmailAddress, Password,
-            Birthday, Address, ContactNumber, Course, Role // Kinukuha ang Role
+            user_code, user_role, user_fn, user_ln,
+            email, password, stud_id, stud_course
         } = req.body;
-        
-        // --- VALIDATION: Allowed Roles ---
-        const allowedRoles = ['Student', 'Instructor'];
-        
-        // Huwag payagan kung walang role o kung ang role ay 'Admin'
-        if (!Role || !allowedRoles.includes(Role)) {
-            return res.status(400).json({ message: "Invalid role selected. Must be Student or Instructor." });
-        }
-        // ---------------------------------
 
-        const hashedPassword = await bcrypt.hash(Password, 10);
+        const allowedRoles = ['student', 'staff']; // admin not allowed
+        if (!user_role || !allowedRoles.includes(user_role.toLowerCase())) {
+            return res.status(400).json({ message: "Invalid role. Must be student or staff." });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const sql = `
-            INSERT INTO Users 
-            (StudentID, LastName, FirstName, MI, EmailAddress, Password,
-             Birthday, Address, ContactNumber, Course, Role, DateRegistered)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) 
+            INSERT INTO tbl_users 
+            (user_code, user_role, user_fn, user_ln, email, password, stud_id, stud_course, date_registered)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
         `;
 
         await db.execute(sql, [
-            StudentID, LastName, FirstName, MI, EmailAddress, 
-            hashedPassword, Birthday, Address, ContactNumber, Course, Role 
+            user_code, user_role.toLowerCase(), user_fn, user_ln,
+            email, hashedPassword, stud_id, stud_course
         ]);
 
-        res.status(201).json({ message: `User registered successfully as ${Role}` });
+        res.status(201).json({ message: `User registered successfully as ${user_role}` });
 
     } catch (error) {
         console.error("Registration Error:", error);
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: "Registration failed: User already exists (ID or Email)." });
+            return res.status(409).json({ message: "User already exists (code or email)." });
         }
-        res.status(500).json({ message: "Registration failed due to server error." });
+        res.status(500).json({ message: "Server error during registration." });
     }
 });
 
 // ==========================
-// LOGIN USER (JWT Token Generation)
+// LOGIN USER
 // ==========================
 router.post("/login", async (req, res) => {
     try {
         const { identifier, password } = req.body;
 
-        const sql = `
-            SELECT * FROM Users 
-            WHERE StudentID = ? OR EmailAddress = ?
-        `;
-
+        const sql = `SELECT * FROM tbl_users WHERE user_code = ? OR email = ?`;
         const [rows] = await db.execute(sql, [identifier, identifier]);
         if (rows.length === 0) return res.status(404).json({ message: "User not found" });
 
         const user = rows[0];
-
-        // 1. Password Verification
-        const isMatch = await bcrypt.compare(password, user.Password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: "Invalid password" });
 
-        // 2. Generate JWT Token
-        const token = jwt.sign(
-            {
-                // Ang mga ito ang babasahin ng jwtDecode sa React
-                UserID: user.UserID, 
-                Role: user.Role, // CRITICAL: Ito ang magdi-determine ng dashboard!
-                FirstName: user.FirstName,
-            },
-            JWT_SECRET,
-            { expiresIn: '2h' }
-        );
+        const token = jwt.sign({
+            user_id: user.user_id,
+            user_code: user.user_code,
+            user_role: user.user_role,
+            user_fn: user.user_fn,
+            user_ln: user.user_ln
+        }, JWT_SECRET, { expiresIn: '2h' });
 
-        // 3. Ibalik ang Token at Role sa React
-        res.json({
-            message: "Login successful",
-            token: token, 
-            role: user.Role 
-        });
+        res.json({ message: "Login successful", token, role: user.user_role });
 
     } catch (error) {
         console.error("Login Error:", error);
-        res.status(500).json({ message: "Login error due to server issue." });
+        res.status(500).json({ message: "Server error during login." });
     }
 });
 
