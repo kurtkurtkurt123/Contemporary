@@ -8,6 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ===============================
 // REGISTER CONTROLLER
 // ===============================
+
 exports.registerUser = async (req, res) => {
     try {
         const {
@@ -16,7 +17,7 @@ exports.registerUser = async (req, res) => {
         } = req.body;
 
         // Only allow student or staff
-        const allowedRoles = ["student", "staff"];
+        const allowedRoles = ["student", "staff", "uo_staff"];
         if (!allowedRoles.includes(user_role.toLowerCase())) {
             return res.status(400).json({
                 message: "Invalid role. Allowed roles: student, staff."

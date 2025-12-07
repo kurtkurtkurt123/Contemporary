@@ -16,7 +16,6 @@ const Register = () => {
         Address: "",
         ContactNumber: "",
         Course: "",
-        // Default na Student ang napili
         Role: "Student" 
     });
 
