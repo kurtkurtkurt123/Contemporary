@@ -1,11 +1,13 @@
+const dotenv = require("dotenv");
 const express = require("express");
 const router = express.Router();
 const db = require("../config/mysql.js"); // Import ng database connection (dapat ito ang tamang path)
 const bcrypt = require("bcrypt"); // Para sa password hashing
 const jwt = require("jsonwebtoken"); // Para sa token generation
+dotenv.config();
 
-// IMPORTANT: Palitan ito ng mas mahaba at mas secure na key!
-const JWT_SECRET = "YourSuperSecureSecretKeyThatMustBeLong";
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // ==========================
 // REGISTER USER (Student/Instructor Only)
