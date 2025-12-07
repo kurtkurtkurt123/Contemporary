@@ -51,7 +51,7 @@ const Home = () => {
     };
 
 
-    // ✅ Tiyakin na naka-login na at may user object
+    
     if (!isAuthenticated || !user || !isAuthReady) { 
          // Kung hindi pa ready, magpakita ng loading screen
          return (
