@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ChevronDownIcon, ChevronUpIcon, UsersIcon, BookOpenIcon, Cog6ToothIcon, 
-        UserCircleIcon, HomeIcon, BriefcaseIcon, AcademicCapIcon, PowerIcon,
-         GlobeAltIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import {
+  ChevronDownIcon, ChevronUpIcon, UsersIcon, BookOpenIcon, Cog6ToothIcon,
+  UserCircleIcon, HomeIcon, BriefcaseIcon, AcademicCapIcon, PowerIcon,
+  GlobeAltIcon, CheckCircleIcon
+} from '@heroicons/react/24/outline';
 
 // =======================================================
 // HELPER COMPONENT: User Dropdown (Profile & Logout)
@@ -46,7 +48,14 @@ const UserDropdown = ({ user, logout }) => {
         <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
           <div className="p-3 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-900 truncate">{user?.FirstName} {user?.LastName}</p>
-            <p className="text-xs text-gray-500 capitalize">{user?.user_role || 'Guest'}</p>
+            <p className='"text-xs text-gray-500 truncate'>{(user?.user_code)}</p>
+            <p className="text-xs text-gray-500 capitalize">
+              {/* Check user?.user_role or user?.Role, depending on your JWT payload key */}
+              {(user?.user_role || user?.Role)?.toLowerCase() === 'uo_staff'
+                ? 'Unofficial Staff'
+                : user?.user_role || user?.Role || 'Guest'
+              }
+            </p>
           </div>
 
           <button
@@ -80,7 +89,7 @@ const NavBar = () => {
   const role = (user?.user_role || '').toLowerCase();
 
   // Define links based on roles
-const getNavLinks = () => {
+  const getNavLinks = () => {
     const baseLinks = [];
 
     // --- LINKS FOR ALL AUTHENTICATED USERS ---
@@ -91,35 +100,35 @@ const getNavLinks = () => {
     // Activity link is shared by Students and Staff, but not Admins by default (can be adjusted)
     // Icon: BriefcaseIcon (Suitable for tasks/activities)
     if (['student', 'staff', 'uo_staff'].includes(role)) {
-        baseLinks.push({ to: '/activities', label: 'Activity', icon: BriefcaseIcon });
+      baseLinks.push({ to: '/activities', label: 'Activity', icon: BriefcaseIcon });
     }
 
     // Admin Specific Links (Dashboard)
     // Icon: Cog6ToothIcon (Represents administration/control panel)
     if (role === 'admin') {
-        baseLinks.push({ to: '/', label: 'Dashboard', icon: Cog6ToothIcon });
+      baseLinks.push({ to: '/', label: 'Dashboard', icon: Cog6ToothIcon });
     }
 
     // --- ROLE SPECIFIC LINKS ---
     // Check Activity link (for Staff/Admin)
     // Icon: CheckCircleIcon (Represents checking/reviewing)
     if (role === 'staff' || role === 'admin') {
-        baseLinks.push({ to: '/staff/check-activity', label: 'Check Activity', icon: CheckCircleIcon });
+      baseLinks.push({ to: '/staff/check-activity', label: 'Check Activity', icon: CheckCircleIcon });
     }
 
     // Admin Specific Links
     if (role === 'admin') {
-        // Students link
-        // Icon: UsersIcon (Represents a group of people/users)
-        baseLinks.push({ to: '/', label: 'Students', icon: UsersIcon });
-        
-        // Materials link
-        // Icon: BookOpenIcon (Represents learning materials/content)
-        baseLinks.push({ to: '/', label: 'Materials', icon: BookOpenIcon });
+      // Students link
+      // Icon: UsersIcon (Represents a group of people/users)
+      baseLinks.push({ to: '/', label: 'Students', icon: UsersIcon });
+
+      // Materials link
+      // Icon: BookOpenIcon (Represents learning materials/content)
+      baseLinks.push({ to: '/', label: 'Materials', icon: BookOpenIcon });
     }
 
     return baseLinks;
-};
+  };
 
   const navLinks = getNavLinks();
 

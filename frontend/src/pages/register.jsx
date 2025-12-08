@@ -212,7 +212,7 @@ const Register = () => {
                                         className={`${inputClass}  appearance-none cursor-pointer pr-10`}
                                     >
                                         <option value="student" className="bg-black hover:bg-black/10">Student</option>
-                                        <option value="staff" className="bg-black hover:bg-black/10">Staff</option>
+                                        <option value="uo_staff" className="bg-black hover:bg-black/10">Staff</option>
                                     </select>
                                 </div>
                                 
