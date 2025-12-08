@@ -76,8 +76,16 @@ const Register = () => {
         setLoading(true);
 
         try {
-            // API call logic (The formData sent now matches backend's expectations)
-            await axios.post("http://localhost:5000/api/register", formData);
+            // Create a payload object to avoid sending unnecessary fields
+            const payload = {
+                ...formData
+            };
+
+            // If stud_course is empty, remove it from the payload to avoid sending undefined/null to backend
+            if (!payload.stud_course) {
+                delete payload.stud_course;
+            }
+            await axios.post("http://localhost:5000/api/register", payload);
             
             toast.success("Registered successfully! You can now login.");
             navigate("/login");

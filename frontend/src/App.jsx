@@ -5,15 +5,14 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Pages
+// Auth Pages
 import Login from "./pages/login.jsx";
 import Register from "./pages/register.jsx";
 import Unauthorized from "./pages/Unauthorized.jsx";
 import Home from "./pages/Home.jsx";
 
-
-// Placeholder Components
-
+// Admin Pages
+import Dashboard from "./pages/admin/Dashboard.jsx";
 
 
 function App() {
@@ -62,7 +61,12 @@ function AppContent() {
 
       {/* ADMIN ROUTES */}
       <Route
-        path="/admin/users"
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]} >
+            <Dashboard />
+          </ProtectedRoute>
+        }
       />
 
       {/* 404 */}
