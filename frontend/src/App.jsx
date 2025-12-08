@@ -1,16 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 // ✅ TAMA NA ANG PATH NA ITO
 import { AuthProvider, useAuth } from "./context/AuthContext"; 
 import ProtectedRoute from "./components/ProtectedRoute"; 
 
 // Imports ng Pages
-import Login from "./pages/login";       
-import Register from "./pages/register"; 
-import Unauthorized from "./pages/Unauthorized";
-import Home from "./pages/Home";
-import AboutPage from "./pages/AboutPage"; 
-import LessonPage from "./pages/LessonPage"; 
-import Syllabus from "./pages/Syllabus"; 
+import Login from "./pages/login.jsx";       
+import Register from "./pages/register.jsx"; 
+import Unauthorized from "./pages/Unauthorized.jsx";
+import Home from "./pages/Home.jsx";
+
 
 // Placeholder Components
 const AdminDashboard = () => <h1>Admin Dashboard Placeholder</h1>;
@@ -20,9 +19,8 @@ const InstructorDashboard = () => <h1>Instructor Dashboard Placeholder</h1>;
 function App() {
   return (
     <BrowserRouter>
-      {/* 1. Wrap ang lahat sa AuthProvider */}
       <AuthProvider>
-        {/* 2. Gagamitin ang AppContent para i-handle ang loading state */}
+        <Toaster position="top-center" />
         <AppContent /> 
       </AuthProvider>
     </BrowserRouter>
@@ -45,22 +43,18 @@ function AppContent() {
     return (
         <Routes>
             {/* --- PUBLIC ROUTES --- */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            <Route path="/about" element={<AboutPage />} /> 
-
+          
             {/* --- PROTECTED HUB ROUTE (CRITICAL) --- */}
             <Route 
                 path="/home" 
-                element={<ProtectedRoute allowedRoles={['Admin', 'Instructor', 'Student']}><Home /></ProtectedRoute>} 
+                element={<ProtectedRoute allowedRoles={['Admin', 'Instructor', 'student']}><Home /></ProtectedRoute>} 
             />
 
-            {/* --- PROTECTED SPECIFIC ROUTES --- */}
-            <Route path="/lessons" element={<ProtectedRoute allowedRoles={['Student']}><LessonPage /></ProtectedRoute>} />
-            <Route path="/syllabus" element={<ProtectedRoute allowedRoles={['Student']}><Syllabus /></ProtectedRoute>} />
-
+        
             {/* Admin Specific Routes */}
             <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['Admin']}><AdminDashboard /></ProtectedRoute>} /> 
             

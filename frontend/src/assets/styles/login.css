@@ -1,0 +1,11 @@
+.bg-city-pattern {
+   background-image: linear-gradient(
+        rgba(0, 0, 0, 0.6), 
+        rgba(0, 0, 0, 0.6)
+    ), 
+    url('../images/bg.png');
+    
+    background-size: cover;
+    background-position: center;
+  
+}

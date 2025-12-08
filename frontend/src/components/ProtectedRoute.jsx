@@ -1,36 +1,44 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-// ✅ FINAL PATH: Umakyat ng isang folder galing /components/ para makita ang /context/
 import { useAuth } from "../context/AuthContext"; 
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  // Kunin ang lahat ng state na kailangan
   const { user, token, isAuthReady } = useAuth();
   const location = useLocation();
 
-  // 1. Loading State: Haharangin ang rendering habang nagche-check ng token
   if (!isAuthReady) {
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <h1 className="text-2xl text-gray-600">Checking credentials...</h1>
-        </div>
-    );
+    return <div className="p-4">Checking credentials...</div>;
   }
   
-  // 2. Check kung naka-login
   if (!token) {
-    // Kung walang token, balik sa Login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 3. Role Check
-  // Tiyakin na ang spelling at casing ng Role ay tugma sa JWT payload ('Admin', 'Student', etc.)
-  if (user && allowedRoles && !allowedRoles.includes(user.Role)) {
-    // Kung mali ang role, redirect sa Unauthorized
-    return <Navigate to="/unauthorized" replace />; 
+  if (!user) {
+    console.error("Token exists but user payload is missing.");
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
+  if (allowedRoles) {
+    
+    const userRole =  user.user_role; 
+  //  console.log("User Role:", userRole);
+
+    // Guard: If the role property itself is missing from the JWT
+    if (!userRole) {
+         console.error("JWT is missing the role property (Role, role, or userType). Access denied.");
+         return <Navigate to="/unauthorized" replace />; 
+    }
+
+    const normalizedUserRole = String(userRole).toLowerCase();
+    const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
+
+    if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
+      console.warn(`Access Denied: User role '${userRole}' not in [${allowedRoles}]`);
+      return <Navigate to="/unauthorized" replace />; 
+    }
   }
 
-  // 4. Access granted
   return children;
 };
 
