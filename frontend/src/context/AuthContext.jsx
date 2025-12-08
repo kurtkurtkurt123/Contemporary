@@ -1,89 +1,108 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; 
-import toast, { Toaster } from 'react-hot-toast';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import toast, { Toaster } from "react-hot-toast";
 
 const AuthContext = createContext(null);
 
+// =====================================================
+//  INITIAL STATE FROM LOCAL STORAGE
+// =====================================================
 const getInitialState = () => {
-    const storedToken = localStorage.getItem('authToken');
-    let decodedUser = null;
-    if (storedToken) {
-        try {
-            decodedUser = jwtDecode(storedToken);
-        } catch (error) {
-            localStorage.removeItem('authToken');
-        }
+    const storedToken = localStorage.getItem("authToken");
+
+    if (!storedToken) {
+        return { token: null, user: null, isAuthReady: true };
     }
-    return {
-        token: storedToken,
-        user: decodedUser,
-        isAuthReady: true,
-    };
+
+    try {
+        const decoded = jwtDecode(storedToken);
+        return { token: storedToken, user: decoded, isAuthReady: true };
+    } catch (error) {
+        console.error("Invalid stored token → clearing it.");
+        localStorage.removeItem("authToken");
+        return { token: null, user: null, isAuthReady: true };
+    }
 };
 
+// =====================================================
+//  PROVIDER
+// =====================================================
 export const AuthProvider = ({ children }) => {
-    
-    const initialState = getInitialState();
-
-    const [token, setToken] = useState(initialState.token);
-    const [user, setUser] = useState(initialState.user);
-    const [isAuthReady, setIsAuthReady] = useState(initialState.isAuthReady);
-    
     const navigate = useNavigate();
 
+    const initial = getInitialState();
+
+    const [token, setToken] = useState(initial.token);
+    const [user, setUser] = useState(initial.user);
+    const [isAuthReady] = useState(initial.isAuthReady);
+
+    // ----------------------------------------------------
+    // Sync token → decode user → store in localStorage
+    // ----------------------------------------------------
     useEffect(() => {
-        if (token) {
-            try {
-                const decodedUser = jwtDecode(token);
-                setUser(decodedUser);
-                localStorage.setItem('authToken', token);
-            } catch (error) {
-                console.error("JWT Decoding Failed During Sync:", error); 
-                localStorage.removeItem('authToken');
-                setToken(null);
-                setUser(null);
-            }
-        } else {
+        if (!token) {
+            setUser(null);
+            localStorage.removeItem("authToken");
+            return;
+        }
+
+        try {
+            const decoded = jwtDecode(token);
+            setUser(decoded);
+            localStorage.setItem("authToken", token);
+        } catch (err) {
+            console.error("Token decode error:", err);
+            localStorage.removeItem("authToken");
+            setToken(null);
             setUser(null);
         }
     }, [token]);
 
-    const login = async (identifier, password) => { 
+    // =====================================================
+    //  LOGIN
+    // =====================================================
+    const login = async (identifier, password) => {
         try {
-            const response = await fetch('http://localhost:5000/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("http://localhost:5000/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ identifier, password }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Login failed');
+                throw new Error(data.message || "Login failed");
             }
 
-            setToken(data.token); 
-            toast.success('Login Successful! Redirecting...');
-            
-            // ✅ CRITICAL FIX: I-force ang navigation sa /home para hindi mag-blank screen
-            navigate('/home'); 
-            
-            return true;
+            // store token
+            setToken(data.token);
 
+            toast.success("Login successful!");
+
+            // ensure navigation works AFTER token is saved
+            setTimeout(() => navigate("/home"), 300);
+
+            return true;
         } catch (error) {
-            console.error("Login attempt error:", error);
-            toast.error(error.message || 'Server Error'); 
+            console.error("Login error:", error);
+            toast.error(error.message || "Server error");
             return false;
         }
     };
 
+    // =====================================================
+    //  LOGOUT
+    // =====================================================
     const logout = () => {
         setToken(null);
         setUser(null);
-        localStorage.removeItem('authToken');
-        toast.success('Logged out');
-        navigate('/login');
+        localStorage.removeItem("authToken");
+        toast.success("Logged out");
+
+        // delay to let the toast show smoothly
+        setTimeout(() => navigate("/login"), 200);
     };
 
     const value = {
@@ -97,16 +116,15 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            <Toaster position="top-right" /> 
+            <Toaster position="top-right" />
             {children}
         </AuthContext.Provider>
     );
 };
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-};
+// =====================================================
+//  CUSTOM HOOK
+// =====================================================
+export const useAuth = () => useContext(AuthContext);
+
+export default AuthContext;

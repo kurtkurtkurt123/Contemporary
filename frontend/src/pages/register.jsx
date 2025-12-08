@@ -30,18 +30,34 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // ✅ FIX: MAP THE FRONTEND PASCALCASE KEYS TO BACKEND SNAKE_CASE KEYS
+        const dataToSend = {
+            // Mapping fields used by the backend's auth.js route
+            user_code: formData.StudentID,
+            email: formData.EmailAddress,
+            password: formData.Password,
+            user_role: formData.Role, // Sending as "Student" or "Instructor"
+
+            // Profile fields for INSERT statement
+            user_fn: formData.FirstName,
+            user_ln: formData.LastName,
+            stud_id: formData.StudentID, 
+            stud_course: formData.Course
+        };
+        
         try {
-            const response = await axios.post("http://localhost:5000/api/register", formData);
+            // Use the mapped dataToSend object
+            const response = await axios.post("http://localhost:5000/api/register", dataToSend); 
             
             // Success Notification
             toast.success("Registered successfully! You can now login.");
             navigate("/login");
             
         } catch (error) {
-            console.error(error);
+            console.error("Registration failed:", error);
             
-            // Error Notification, kukunin ang message galing sa backend (e.g., "Invalid role selected")
-            const errorMessage = error.response?.data?.message || "Registration failed. Please try again.";
+            // Error Notification, kukunin ang message galing sa backend 
+            const errorMessage = error.response?.data?.message || "Registration failed. Please check your inputs.";
             toast.error(errorMessage);
         }
     };

@@ -1,79 +1,111 @@
-const express = require('express');
-const sql = require('mssql');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
+const db = require("../config/mysql");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
-const app = express();
+const JWT_SECRET = process.env.JWT_SECRET;
 
-// Middleware
-app.use(express.json()); // Para mabasa ang JSON galing React
-app.use(cors()); // Para payagan ang React na kumonekta
+// ===============================
+// REGISTER CONTROLLER
+// ===============================
 
-// 1. Database Configuration (Palitan mo ito ng details ng MS SQL mo)
-const dbConfig = {
-    user: 'sa',             // SQL Username
-    password: 'YourPassword123', // SQL Password
-    server: 'localhost',    // Server name
-    database: 'LMS_DB',     // Database Name
-    options: {
-        encrypt: true,      // for azure
-        trustServerCertificate: true // change to true for local dev / self-signed certs
+exports.registerUser = async (req, res) => {
+    try {
+        const {
+            user_code, user_role, user_fn, user_ln,
+            email, password, stud_id, stud_course
+        } = req.body;
+
+        // Only allow student or staff
+        const allowedRoles = ["student", "staff", "uo_staff"];
+        if (!allowedRoles.includes(user_role.toLowerCase())) {
+            return res.status(400).json({
+                message: "Invalid role. Allowed roles: student, staff."
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const sql = `
+            INSERT INTO tbl_users 
+            (user_code, user_role, user_fn, user_ln, email, password, stud_id, stud_course, date_registered)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `;
+
+        await db.execute(sql, [
+            user_code,
+            user_role.toLowerCase(),
+            user_fn,
+            user_ln,
+            email,
+            hashedPassword,
+            stud_id,
+            stud_course
+        ]);
+
+        res.status(201).json({ message: "User registered successfully." });
+
+    } catch (error) {
+        console.error("Registration Error:", error);
+
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                message: "User already exists (email or user_code is taken)."
+            });
+        }
+
+        res.status(500).json({ message: "Server error during registration." });
     }
 };
 
-// 2. Ang LOGIN Route
-app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
 
+// ===============================
+// LOGIN CONTROLLER
+// ===============================
+exports.loginUser = async (req, res) => {
     try {
-        // Connect sa Database
-        let pool = await sql.connect(dbConfig);
+        const { identifier, password } = req.body;
 
-        // Query: Hanapin ang user base sa email at password
-        // NOTE: Sa totoong app, dapat naka-hash ang password (gamit ang bcrypt)
-        let result = await pool.request()
-            .input('email', sql.NVarChar, email)
-            .input('password', sql.NVarChar, password)
-            .query('SELECT * FROM Users WHERE Email = @email AND Password = @password');
+        // identifier = user_code OR email
+        const sql = `SELECT * FROM tbl_users WHERE user_code = ? OR email = ?`;
 
-        const user = result.recordset[0];
+        const [rows] = await db.execute(sql, [identifier, identifier]);
 
-        // Kung walang nahanap na user
-        if (!user) {
-            return res.status(401).json({ message: 'Mali ang email o password' });
+        // If no user found
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "User not found." });
         }
 
-        // 3. Generate JWT Token (Dito ilalagay ang ROLE)
-        // Siguraduhin na 'Role' ang column name mo sa database
+        const user = rows[0];
+
+        // Compare passwords
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid password." });
+        }
+
+        // Create token
         const token = jwt.sign(
-            { 
-                id: user.UserID, 
-                email: user.Email, 
-                role: user.Role // <--- IMPORTANTE: Ito ang babasahin ng React!
+            {
+                user_id: user.user_id,
+                user_code: user.user_code,
+                user_role: user.user_role,
+                user_fn: user.user_fn,
+                user_ln: user.user_ln
             },
-            'SecretKeyMoDapatMahaba', // Secret Key
-            { expiresIn: '2h' }
+            JWT_SECRET,
+            { expiresIn: "2h" }
         );
 
-        // Ibalik sa React
         res.json({
-            message: 'Login successful',
-            token: token,
-            user: {
-                firstName: user.FirstName,
-                lastName: user.LastName,
-                role: user.Role
-            }
+            message: "Login successful.",
+            token,
+            role: user.user_role
         });
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Database error' });
+    } catch (error) {
+        console.error("Login Error:", error);
+        res.status(500).json({ message: "Server error during login." });
     }
-});
-
-// Start Server
-const PORT = 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+};

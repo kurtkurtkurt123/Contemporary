@@ -18,9 +18,12 @@ router.post("/register", async (req, res) => {
             email, password, stud_id, stud_course
         } = req.body;
 
-        const allowedRoles = ['student', 'staff']; // admin not allowed
-        if (!user_role || !allowedRoles.includes(user_role.toLowerCase())) {
-            return res.status(400).json({ message: "Invalid role. Must be student or staff." });
+        // Ensure roles are saved as PascalCase (Student, Instructor) for consistency
+        const roleString = user_role.charAt(0).toUpperCase() + user_role.slice(1).toLowerCase();
+        
+        const allowedRoles = ['Student', 'Instructor']; // Added 'Instructor'
+        if (!user_role || !allowedRoles.includes(roleString)) {
+            return res.status(400).json({ message: "Invalid role. Must be Student or Instructor." });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -32,11 +35,11 @@ router.post("/register", async (req, res) => {
         `;
 
         await db.execute(sql, [
-            user_code, user_role.toLowerCase(), user_fn, user_ln,
+            user_code, roleString, user_fn, user_ln,
             email, hashedPassword, stud_id, stud_course
         ]);
 
-        res.status(201).json({ message: `User registered successfully as ${user_role}` });
+        res.status(201).json({ message: `User registered successfully as ${roleString}` });
 
     } catch (error) {
         console.error("Registration Error:", error);
@@ -62,15 +65,20 @@ router.post("/login", async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: "Invalid password" });
 
+        // ✅ CRITICAL FIX: Use PascalCase keys in JWT payload to match frontend AuthContext/Home.jsx
         const token = jwt.sign({
-            user_id: user.user_id,
-            user_code: user.user_code,
-            user_role: user.user_role,
-            user_fn: user.user_fn,
-            user_ln: user.user_ln
+            UserID: user.user_id, // For general identification
+            UserCode: user.user_code,
+            Role: user.user_role,       // <--- CRITICAL FIX: Ensures Home/ProtectedRoutes read the role
+            FirstName: user.user_fn,
+            LastName: user.user_ln
         }, JWT_SECRET, { expiresIn: '2h' });
 
-        res.json({ message: "Login successful", token, role: user.user_role });
+        res.json({ 
+            message: "Login successful", 
+            token, 
+            Role: user.user_role // Return the role outside the token as well
+        });
 
     } catch (error) {
         console.error("Login Error:", error);
