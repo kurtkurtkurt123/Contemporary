@@ -44,6 +44,7 @@ const TaskSubmissionList = () => {
   const { user, logout } = useAuth();
   const itemsPerPage = 12;
 
+
   const uniqueSections = useMemo(() => ['All', ...new Set(SUBMISSION_DATA.map(item => item.course))], []);
   const uniqueTasks = useMemo(() => ['All', ...new Set(SUBMISSION_DATA.map(item => item.task))], []);
 
@@ -105,7 +106,7 @@ const TaskSubmissionList = () => {
   return (
     <>
       {user && <NavBar user={user} onLogout={logout} />}
-      <div className="p-6 pt-32 font-poppins font-instrument bg-[#636CCB]">
+      <div className="p-6 pt-32 font-poppins bg-[#636CCB] font-instrument relative">
         <div className="bg-[#3C467B] text-white p-8 rounded-xl shadow-xl mb-6">
           <h1 className="text-3xl font-semibold">Student Tasks</h1>
           <p className="text-sm opacity-80 mt-1">List of all Student Activities</p>

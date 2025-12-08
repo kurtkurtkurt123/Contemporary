@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AcademicCapIcon, BookOpenIcon, CheckIcon, ArrowRightIcon, MagnifyingGlassIcon as SearchIcon } from '@heroicons/react/24/outline';
 import NavBar from "../../components/public/NavBar";
 import { useAuth } from "../../context/AuthContext";
@@ -21,38 +21,67 @@ const TABLE_DATA = [
 // DONUT CHART
 // ===============================
 const DonutChart = () => {
-    const complianceStyle = {
-        background: `conic-gradient(
-            #10B981 0% 60%,
-            #F59E0B 60% 80%,
-            #EF4444 80% 100%
-        )`,
-    };
+  // Track animation progress
+  const [progress, setProgress] = useState(0);
 
-    return (
-        <div className="flex flex-row justify-between gap-12 items-center space-y-6">
-            <div className="relative w-64 h-64 rounded-full transition duration-500 hover:rotate-3" style={complianceStyle}>
-                <div className="absolute inset-0 m-auto w-36 h-36 bg-white rounded-full"></div>
-            </div>
+  // Target percentages
+  const target = { onTime: 60, late: 20, noSubmission: 20 }; // sum must be 100
 
-            <div className="space-y-2 text-sm">
-                <div className="flex items-center space-x-2">
-                    <span className="w-3 h-3 bg-emerald-500 rounded-full"></span>
-                    <span>On Time</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <span className="w-3 h-3 bg-amber-500 rounded-full"></span>
-                    <span>Late</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <span className="w-3 h-3 bg-red-500 rounded-full"></span>
-                    <span>No Submission</span>
-                </div>
-            </div>
+  useEffect(() => {
+    let start = 0;
+    const interval = setInterval(() => {
+      start += 1;
+      if (start <= 100) setProgress(start);
+      else clearInterval(interval);
+    }, 15);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate current segment percentages
+  const onTimePercent = Math.min(progress, target.onTime);
+  const latePercent = Math.min(Math.max(progress - target.onTime, 0), target.late);
+  const noSubPercent = Math.min(Math.max(progress - target.onTime - target.late, 0), target.noSubmission);
+
+  const complianceStyle = {
+    background: `conic-gradient(
+      #10B981 0% ${onTimePercent}%,
+      #F59E0B ${onTimePercent}% ${onTimePercent + latePercent}%,
+      #EF4444 ${onTimePercent + latePercent}% ${onTimePercent + latePercent + noSubPercent}%
+    )`,
+  };
+
+  return (
+    <div className="flex flex-row justify-between gap-12 items-center space-y-6">
+      <div className="relative w-64 h-64">
+        <div
+          className="absolute inset-0 rounded-full transition duration-500 hover:rotate-3"
+          style={complianceStyle}
+        />
+        <div className="absolute inset-0 m-auto w-36 h-36 bg-white rounded-full flex flex-col items-center justify-center text-center text-sm font-semibold">
+          <div className="text-green-600">{onTimePercent}% On Time</div>
+          <div className="text-amber-500">{latePercent}% Late</div>
+          <div className="text-red-500">{noSubPercent}% No Submission</div>
         </div>
-    );
-};
+      </div>
 
+      {/* Legend */}
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center space-x-2">
+          <span className="w-3 h-3 bg-emerald-500 rounded-full"></span>
+          <span>{onTimePercent}% On Time</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="w-3 h-3 bg-amber-500 rounded-full"></span>
+          <span>{latePercent}% Late</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+          <span>{noSubPercent}% No Submission</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 // ===============================
 // KPI CARD (Hover Transition Added)
 // ===============================
@@ -103,7 +132,7 @@ const Dashboard = () => {
                 </div>
             )}
 
-            <div className={`min-h-screen pt-32 p-8 ${mainBgColor} font-instrument animate-fade-in`}>
+            <div className={`min-h-screen pt-32 p-8 ${mainBgColor} font-instrument`}>
 
 
                 <div className="max-w-7xl mx-auto space-y-8">

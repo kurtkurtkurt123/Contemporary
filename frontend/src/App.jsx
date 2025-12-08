@@ -14,6 +14,8 @@ import Home from "./pages/Home.jsx";
 // Admin Pages
 import Dashboard from "./pages/admin/Dashboard.jsx";
 import TaskSubmissionList from "./pages/admin/Tasks/page.jsx";
+import MaterialsTable from "./pages/admin/Materials/page.jsx";
+
 
 function App() {
   return (
@@ -76,6 +78,16 @@ function AppContent() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/materials"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]} >
+            <MaterialsTable />
+          </ProtectedRoute>
+        }
+      />
+
+
      
     
       {/* 404 */}
