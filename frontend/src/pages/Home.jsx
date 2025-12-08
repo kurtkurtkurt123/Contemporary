@@ -29,6 +29,11 @@ const Home = () => {
     }
 
     return (
+<<<<<<< HEAD
+=======
+        // 🌈 FIX: Changed background from bg-gray-100 to a light teal
+        <div className="min-h-screen bg-teal-50 text-gray-800">
+>>>>>>> 0864ac100fc67a5816a9b2e06e222a565d371d4e
 
         <> 
         {renderNavBar()}
@@ -36,9 +41,11 @@ const Home = () => {
            
           
 
-            <div className="pt-32 px-6 max-w-6xl mx-auto">
+            {/* 🛠️ FIX: Content is now wider (max-w-7xl) and uses less padding (px-4) */}
+            <div className="pt-32 px-4 max-w-7xl mx-auto">
                 {/* Welcome Section */}
-                <div className="bg-white rounded-2xl shadow-xl p-8 mb-10 border border-gray-200">
+                {/* 🛠️ FIX: Using p-7 for padding (compromise between p-5 and p-8) */}
+                <div className="bg-white rounded-2xl shadow-xl p-7 mb-10 border border-gray-200">
                     <h1 className="text-3xl font-extrabold mb-2">
                         Welcome back, <span className="text-black">{user.FirstName}</span>
                     </h1>

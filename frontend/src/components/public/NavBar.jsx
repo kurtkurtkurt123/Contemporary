@@ -1,79 +1,54 @@
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import {
-  ChevronDownIcon, ChevronUpIcon, UsersIcon, BookOpenIcon, Cog6ToothIcon,
-  UserCircleIcon, HomeIcon, BriefcaseIcon, AcademicCapIcon, PowerIcon,
-  GlobeAltIcon, CheckCircleIcon
-} from '@heroicons/react/24/outline';
+import React from "react";
 
-// =======================================================
-// HELPER COMPONENT: User Dropdown (Profile & Logout)
-// =======================================================
-const UserDropdown = ({ user, logout }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
+// --- Local Icons for NavBar ---
+const GlobeIcon = ({ size = 24, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="2" y1="12" x2="22" y2="12"></line>
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+  </svg>
+);
 
-  const handleLogout = () => {
-    setIsOpen(false);
-    logout();
-  };
+const LogOut = ({ size = 24, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+    <polyline points="16 17 21 12 16 7"></polyline>
+    <line x1="21" y1="12" x2="9" y2="12"></line>
+  </svg>
+);
 
-  // Function to navigate to the profile page (assuming '/profile')
-  const handleViewProfile = () => {
-    setIsOpen(false);
-    navigate('/profile');
-  };
-
+const NavBar = ({ user, onLogout }) => {
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 py-2 px-3 bg-gray-200 rounded-full hover:bg-gray-300 transition"
-      >
-        <div className="flex items-center justify-center h-8 w-8 bg-black text-white rounded-full text-sm font-semibold">
-          {/* Display user's first initial, fallback to 'U' */}
-          {(user?.FirstName || 'U').charAt(0).toUpperCase()}
+    <div className="fixed top-0 left-0 w-full flex justify-center z-50 pt-6 px-4">
+      <nav className="bg-white/90 backdrop-blur-md text-gray-800 rounded-full shadow-2xl px-6 py-3 flex items-center justify-between w-full max-w-5xl border border-gray-200">
+        <div className="flex items-center gap-2">
+           <div className="bg-blue-600 p-2 rounded-full text-white">
+             <GlobeIcon size={20} />
+           </div>
+           <span className="font-bold text-lg tracking-tight hidden sm:block">Contemporary World</span>
         </div>
-        <span className="text-gray-800 font-medium">{user?.user_fn + ' ' + user?.user_ln || 'User'}</span>
-        {isOpen ? (
-          <ChevronUpIcon className="h-5 w-5 text-gray-600" />
-        ) : (
-          <ChevronDownIcon className="h-5 w-5 text-gray-600" />
-        )}
-      </button>
 
-      {/* Dropdown Content */}
-      {isOpen && (
-        <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
-          <div className="p-3 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-900 truncate">{user?.FirstName} {user?.LastName}</p>
-            <p className='"text-xs text-gray-500 truncate'>{(user?.user_code)}</p>
-            <p className="text-xs text-gray-500 capitalize">
-              {/* Check user?.user_role or user?.Role, depending on your JWT payload key */}
-              {(user?.user_role || user?.Role)?.toLowerCase() === 'uo_staff'
-                ? 'Unofficial Staff'
-                : user?.user_role || user?.Role || 'Guest'
-              }
-            </p>
-          </div>
-
-          <button
-            onClick={handleViewProfile}
-            className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition"
-          >
-            <UserCircleIcon className="h-5 w-5 mr-3 text-gray-500" />
-            View Profile
-          </button>
-          <button
-            onClick={handleLogout}
-            className="flex items-center w-full px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition"
-          >
-            <PowerIcon className="h-5 w-5 mr-3 text-red-400" />
-            Logout
-          </button>
+        <div className="flex items-center gap-6">
+           {user && (
+             <div className="flex items-center gap-3">
+               <div className="text-right hidden md:block">
+                 <p className="text-sm font-bold text-gray-900">{user.FirstName} {user.LastName}</p>
+                 <p className="text-xs text-gray-500">Student</p>
+               </div>
+               <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold border border-gray-200">
+                  {user.FirstName ? user.FirstName.charAt(0) : "U"}
+               </div>
+             </div>
+           )}
+           <button 
+             onClick={onLogout}
+             className="p-2 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-full transition-colors"
+             title="Logout"
+           >
+             <LogOut size={20} />
+           </button>
         </div>
-      )}
+      </nav>
     </div>
   );
 };
