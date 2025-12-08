@@ -2,43 +2,47 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext"; 
 
+// --- Inside ProtectedRoute.js ---
+
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, token, isAuthReady } = useAuth();
   const location = useLocation();
 
+  // 1. Loading State Check (Must be first)
   if (!isAuthReady) {
-    return <div className="p-4">Checking credentials...</div>;
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+             <h1 className="text-2xl text-gray-600">Checking credentials...</h1>
+        </div>
+    );
   }
   
-  if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (!user) {
-    console.error("Token exists but user payload is missing.");
+  // 2. Authentication Check (CRITICAL: Check for both token AND user)
+  if (!token || !user) { 
+    // If no token or no user data, redirect to Login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
+  // 3. Role Check (This block ONLY runs if 'user' and 'token' exist)
   if (allowedRoles) {
-    
-    const userRole =  user.user_role; 
-  //  console.log("User Role:", userRole);
+  
+    const userRole = user.Role || user.user_role || user.UserType; 
 
-    // Guard: If the role property itself is missing from the JWT
     if (!userRole) {
-         console.error("JWT is missing the role property (Role, role, or userType). Access denied.");
+         console.error("User object is valid but is missing the role property. Access denied.");
          return <Navigate to="/unauthorized" replace />; 
     }
 
     const normalizedUserRole = String(userRole).toLowerCase();
     const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
-
+    
     if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
       console.warn(`Access Denied: User role '${userRole}' not in [${allowedRoles}]`);
       return <Navigate to="/unauthorized" replace />; 
     }
   }
 
+  // Access granted
   return children;
 };
 
