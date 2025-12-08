@@ -22,6 +22,14 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
+.font-instrument {
+  font-family: 'Instrument Sans', sans-serif;
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

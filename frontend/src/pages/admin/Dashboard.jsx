@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AcademicCapIcon, BookOpenIcon, CheckIcon, ArrowRightIcon, MagnifyingGlassIcon as SearchIcon } from '@heroicons/react/24/outline';
 import NavBar from "../../components/public/NavBar";
 import { useAuth } from "../../context/AuthContext";
@@ -18,7 +18,7 @@ const TABLE_DATA = [
 ];
 
 // ===============================
-// UPDATED DONUT CHART (Extended)
+// DONUT CHART
 // ===============================
 const DonutChart = () => {
     const complianceStyle = {
@@ -30,8 +30,8 @@ const DonutChart = () => {
     };
 
     return (
-        <div className="flex flex-col items-center space-y-6">
-            <div className="relative w-64 h-64 rounded-full" style={complianceStyle}>
+        <div className="flex flex-row justify-between gap-12 items-center space-y-6">
+            <div className="relative w-64 h-64 rounded-full transition duration-500 hover:rotate-3" style={complianceStyle}>
                 <div className="absolute inset-0 m-auto w-36 h-36 bg-white rounded-full"></div>
             </div>
 
@@ -53,8 +53,12 @@ const DonutChart = () => {
     );
 };
 
+// ===============================
+// KPI CARD (Hover Transition Added)
+// ===============================
 const KpiCard = ({ title, count, icon: Icon, color, iconBg, note }) => (
-    <div className={`p-5 rounded-xl text-white shadow-lg flex justify-between items-center ${color}`}>
+    <div className={`p-5 rounded-xl text-white shadow-lg flex justify-between items-center ${color} 
+                    transition duration-300 ease-in-out hover:shadow-2xl hover:scale-[1.02] cursor-pointer`}>
         <div>
             <p className="text-lg font-medium">{title}</p>
             <h2 className="text-4xl font-extrabold mt-1">{count}</h2>
@@ -66,9 +70,20 @@ const KpiCard = ({ title, count, icon: Icon, color, iconBg, note }) => (
     </div>
 );
 
+// ===============================
+// MAIN DASHBOARD COMPONENT
+// ===============================
 const Dashboard = () => {
     const { user, logout } = useAuth();
     const mainBgColor = "bg-[#3C467B]";
+
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredData = TABLE_DATA.filter((row) =>
+        Object.values(row).some((value) =>
+            String(value).toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    );
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -80,82 +95,100 @@ const Dashboard = () => {
     };
 
     return (
-        <div className={`min-h-screen pt-32 p-8 ${mainBgColor}`}>
-            {user && <NavBar user={user} onLogout={logout} />}
-
-            <div className="max-w-7xl mx-auto space-y-8">
-
-                {/* KPI CARDS */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {KPI_DATA.map((kpi, index) => (
-                        <KpiCard key={index} {...kpi} />
-                    ))}
+        // Added animate-fade-in to the main container
+        <>
+            {user && (
+                <div className="fixed top-0 left-0 w-full z-50">
+                    <NavBar user={user} onLogout={logout} />
                 </div>
+            )}
 
-                {/* FULL-WIDTH DONUT CHART */}
-                <div className="bg-white p-8 rounded-xl shadow-xl">
-                    <h3 className="text-xl font-semibold mb-6 border-b pb-3">Compliance of Assignments</h3>
+            <div className={`min-h-screen pt-32 p-8 ${mainBgColor} font-instrument animate-fade-in`}>
 
-                    <div className="flex justify-center">
-                        <DonutChart />
+
+                <div className="max-w-7xl mx-auto space-y-8">
+
+                    {/* KPI CARDS */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {KPI_DATA.map((kpi, index) => (
+                            <KpiCard key={index} {...kpi} />
+                        ))}
                     </div>
 
-                    <p className="text-sm text-gray-500 text-center pt-6">
-                        These are the status of all students who comply as of this week.
-                    </p>
-                </div>
-
-                {/* TABLE */}
-                <div className="bg-white p-6 rounded-xl shadow-xl">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-6">Weekly Task Submission</h3>
-
-                    {/* Search */}
-                    <div className="flex justify-end mb-4">
-                        <div className="relative w-full max-w-xs">
-                            <input 
-                                type="text"
-                                placeholder="Search Students"
-                                className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                            />
-                            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    {/* DONUT CHART CARD (Slight hover transition added) */}
+                    <div className="bg-white p-8 rounded-xl shadow-xl transition duration-300 hover:shadow-2xl">
+                        <h3 className="text-xl font-semibold mb-6 border-b pb-3">Compliance of Assignments</h3>
+                        <div className="flex justify-center">
+                            <DonutChart />
                         </div>
+                        <p className="text-sm text-gray-500 text-center pt-6">
+                            These are the status of all students who comply as of this week.
+                        </p>
                     </div>
 
-                    {/* TABLE CONTENT */}
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    {['Student ID', 'Student Name', 'Course & Section', 'Task Submitted', 'Date Submitted', 'Status']
-                                        .map((header) => (
-                                            <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                {header}
-                                            </th>
-                                        ))}
-                                </tr>
-                            </thead>
+                    {/* TABLE CARD */}
+                    <div className="bg-white p-6 rounded-xl shadow-xl">
+                        <h3 className="text-xl font-semibold text-gray-800 mb-6">Weekly Task Submission</h3>
 
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {TABLE_DATA.map((row) => (
-                                    <tr key={row.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.id}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{row.name}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{row.course}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{row.task}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{row.date}</td>
-                                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${getStatusStyle(row.status)}`}>
-                                            {row.status}
-                                        </td>
+                        {/* Search Bar */}
+                        <div className="flex justify-end mb-4">
+                            <div className="relative w-full max-w-xs">
+                                <input
+                                    type="text"
+                                    placeholder="Search Students"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition"
+                                />
+                                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            </div>
+                        </div>
+
+                        {/* TABLE CONTENT */}
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-[#3C467B] text-white">
+                                    <tr>
+                                        {['Student ID', 'Student Name', 'Course & Section', 'Task Submitted', 'Date Submitted', 'Status']
+                                            .map((header) => (
+                                                <th key={header} className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                                    {header}
+                                                </th>
+                                            ))}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredData.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="6" className="text-center py-6 text-gray-500 text-sm">
+                                                No results found.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        filteredData.map((row) => (
+                                            // Added hover:bg-gray-50 transition for smooth table interaction
+                                            <tr key={row.id} className="cursor-pointer transition duration-150 hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.id}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">{row.name}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">{row.course}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">{row.task}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">{row.date}</td>
+                                                <td className={`px-6 py-4 whitespace-nowrap text-sm ${getStatusStyle(row.status)}`}>
+                                                    {row.status}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
                     </div>
 
                 </div>
-
             </div>
-        </div>
+        </>
     );
 };
 

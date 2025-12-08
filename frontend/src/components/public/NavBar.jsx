@@ -30,7 +30,7 @@ const UserDropdown = ({ user, logout }) => {
         : user?.user_role || user?.Role || 'Guest';
 
     // Safely get name initials for the avatar
-    const userInitials = (user?.FirstName || 'U').charAt(0) + (user?.LastName || 'L').charAt(0).toUpperCase();
+    const userInitials = (user?.user_fn || 'U').charAt(0) + (user?.user_ln || 'L').charAt(0).toUpperCase();
 
     return (
         <div className="relative z-50">
@@ -42,7 +42,7 @@ const UserDropdown = ({ user, logout }) => {
                     {userInitials}
                 </div>
                 {/* Name is hidden on mobile to save space, but visible in the dropdown */}
-                <span className="text-gray-800 font-medium hidden md:inline">{user?.FirstName}</span> 
+                <span className="text-gray-800 font-medium hidden md:inline">{user?.user_fn}</span> 
                 
                 {isOpen ? (
                     <ChevronUpIcon className="h-5 w-5 text-gray-600" />
@@ -54,9 +54,9 @@ const UserDropdown = ({ user, logout }) => {
             {isOpen && (
                 <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
                     <div className="p-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900 truncate mb-2">{user?.FirstName + ', ' + user?.LastName || 'User'}</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate mb-2">{user?.user_fn + ', ' + user?.user_ln || 'User'}</p>
                         <p className="text-xs text-gray-500 capitalize">{roleDisplay}</p>
-                        <p className='text-xs text-gray-300 truncate'>{user?.UserCode}</p>
+                        <p className='text-xs text-gray-300 truncate'>{user?.user_code}</p>
                     </div>
 
                     <button
@@ -116,7 +116,7 @@ const NavBar = () => {
     const navLinks = getNavLinks();
 
     return (
-        <nav className="fixed top-4 left-0 right-0 z-50">
+        <nav className="fixed top-4 left-0 right-0 z-50 font-poppins">
             {/* Inner DIV: This is the container that controls the width and appearance of the bar */}
             <div className="max-w-7xl rounded-3xl z-40 bg-white border border-gray-200 drop-shadow-md shadow-lg mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20">
