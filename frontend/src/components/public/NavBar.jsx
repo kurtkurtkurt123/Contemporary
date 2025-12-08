@@ -102,7 +102,7 @@ const NavBar = () => {
         }
 
         if (role === 'staff' || role === 'admin') {
-            baseLinks.push({ to: '/staff/check-activity', label: 'Check Activity', icon: CheckCircleIcon });
+            baseLinks.push({ to: '/tasks', label: 'Check Activity', icon: CheckCircleIcon });
         }
 
         if (role === 'admin') {

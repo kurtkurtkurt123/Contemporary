@@ -30,6 +30,16 @@
   font-family: 'Instrument Sans', sans-serif;
 }
 
+.bg-pages {
+  background: 
+    linear-gradient(
+      rgba(60, 70, 123, 0.6), /* semi-transparent overlay color */
+      rgba(60, 70, 123, 0.6)
+    ),
+    url('../src/assets/images/bg2.png') no-repeat center center;
+  background-size: cover;
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

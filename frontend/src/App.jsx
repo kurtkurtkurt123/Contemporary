@@ -13,7 +13,7 @@ import Home from "./pages/Home.jsx";
 
 // Admin Pages
 import Dashboard from "./pages/admin/Dashboard.jsx";
-
+import TaskSubmissionList from "./pages/admin/Tasks/page.jsx";
 
 function App() {
   return (
@@ -68,7 +68,16 @@ function AppContent() {
           </ProtectedRoute>
         }
       />
-
+      <Route 
+        path="/tasks"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "staff"]} >
+            <TaskSubmissionList />
+          </ProtectedRoute>
+        }
+      />
+     
+    
       {/* 404 */}
       <Route path="*" element={<h1>404 Page Not Found</h1>} />
     </Routes>
