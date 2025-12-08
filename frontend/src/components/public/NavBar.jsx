@@ -106,7 +106,7 @@ const NavBar = () => {
         }
 
         if (role === 'admin') {
-            baseLinks.push({ to: '/admin/students', label: 'Students', icon: UsersIcon });
+            baseLinks.push({ to: '/students', label: 'Students', icon: UsersIcon });
             baseLinks.push({ to: '/materials', label: 'Materials', icon: BookOpenIcon });
         }
 

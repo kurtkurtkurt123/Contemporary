@@ -4,7 +4,15 @@ import NavBar from '../../../components/public/NavBar';
 import toast from 'react-hot-toast';
 import AddMaterial from './addMaterials/addPage';
 import EditMaterial from './EditMaterials/editPage';
-import { MagnifyingGlassIcon as SearchIcon, ArrowDownTrayIcon, EllipsisVerticalIcon, PlusIcon } from '@heroicons/react/24/outline';
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+
+import { 
+  MagnifyingGlassIcon as SearchIcon, 
+  ArrowDownTrayIcon, 
+  EllipsisVerticalIcon, 
+  PlusIcon 
+} from '@heroicons/react/24/outline';
 
 const MaterialsTable = () => {
   const { user, logout } = useAuth();
@@ -60,13 +68,13 @@ const MaterialsTable = () => {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const pagesArray = Array.from({ length: totalPages }, (_, i) => i + 1);
 
+  // Handlers
   const handleAddMaterial = () => setIsAddModalOpen(true);
   const handleCloseAddMaterial = () => {
     setIsAddModalOpen(false);
     fetchMaterials();
   };
 
-  // Open edit modal for a specific material
   const handleOpenEditMaterial = (id) => {
     setEditMaterialId(id);
     setIsEditModalOpen(true);
@@ -78,8 +86,46 @@ const MaterialsTable = () => {
     fetchMaterials();
   };
 
-  const handleExport = () => {
-    alert('Export List clicked!');
+  // Export PDF
+  const handleExportPDF = () => {
+    if (materials.length === 0) {
+      toast.error('No materials to export.');
+      return;
+    }
+
+    const doc = new jsPDF();
+    const columns = ['Item Code', 'Item Name', 'Date Uploaded', 'Item Type', 'Deadline', 'Item Score'];
+    const rows = materials.map(item => [
+      item.item_code,
+      item.item_name,
+      item.date_uploaded ? new Date(item.date_uploaded).toLocaleString() : '',
+      item.item_type,
+      item.date_deadline ? new Date(item.date_deadline).toLocaleString() : '',
+      item.item_grade ?? ''
+    ]);
+
+    doc.setFontSize(18);
+    doc.text('Materials List', 14, 22);
+
+    doc.autoTable({
+      startY: 30,
+      head: [columns],
+      body: rows,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [60, 70, 123], textColor: 255 },
+    });
+
+    doc.save(`materials_list_${new Date().toISOString()}.pdf`);
+  };
+
+  // Print
+  const handlePrint = () => {
+    const printContents = document.getElementById('materialsTable').innerHTML;
+    const originalContents = document.body.innerHTML;
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+    window.location.reload();
   };
 
   return (
@@ -125,17 +171,17 @@ const MaterialsTable = () => {
               </button>
 
               <button
-                onClick={handleExport}
+                onClick={handlePrint}
                 className="bg-[#4A56A3] hover:bg-[#5a64b8] px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition"
               >
-                <ArrowDownTrayIcon className="h-5" /> Export List
+                <ArrowDownTrayIcon className="h-5" /> Export PDF
               </button>
             </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl shadow-xl p-6 overflow-x-auto">
+        <div id="materialsTable" className="bg-white rounded-xl shadow-xl p-6 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-[#3C467B] text-white">
               <tr>
@@ -160,7 +206,7 @@ const MaterialsTable = () => {
               ) : (
                 paginatedData.map(item => (
                   <tr key={item.item_code} className="hover:bg-gray-50 transition duration-150 cursor-pointer"
-                      onClick={() => handleOpenEditMaterial(item.item_code)}
+                    onClick={() => handleOpenEditMaterial(item.item_code)}
                   >
                     <td className="px-6 py-4 text-left text-md font-medium">{item.item_code}</td>
                     <td className="px-6 py-4 text-left text-md">{item.item_name}</td>

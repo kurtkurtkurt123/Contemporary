@@ -1,70 +1,118 @@
 const db = require("../config/mysql");
 require("dotenv").config();
 
+// Fetch all students (with optional course filter)
 exports.getStudents = async (req, res) => {
-    try {
-        // ✨ Use req.query to get optional filters from the URL
-        const { course } = req.query;
+  try {
+    const { course } = req.query;
 
-        let sql = `
-            SELECT 
-                user_id,
-                user_code, 
-                user_role, 
-                user_fn, 
-                user_ln, 
-                email, 
-                stud_course 
-            FROM tbl_users
-            WHERE user_role = 'student' 
-        `;
-        const params = [];
+    let sql = `
+      SELECT 
+        user_id,
+        user_code, 
+        user_role, 
+        user_fn, 
+        user_ln, 
+        email, 
+        stud_course,
+        created_at AS registeredDate
+      FROM tbl_users
+      WHERE user_role IN ('student', 'staff', 'uo_staff')
+    `;
+    const params = [];
 
-        // If a course is provided in the query, add it to the SQL statement
-        if (course) {
-            sql += ' AND stud_course = ?';
-            params.push(course);
-        }
-
-        const [students] = await db.execute(sql, params);
-        res.status(200).json(students);
-
-    } catch (error) {
-        console.error("Error fetching students:", error);
-        res.status(500).json({ message: "Server error while fetching students." });
+    if (course && course !== 'All') {
+      sql += ' AND stud_course = ?';
+      params.push(course);
     }
+
+    const [students] = await db.execute(sql, params);
+    res.status(200).json({ success: true, data: students });
+
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json({ message: "Server error while fetching students." });
+  }
 };
 
+// Get single student by user_code
+exports.getStudentById = async (req, res) => {
+  try {
+    const { user_code } = req.params;
+
+    const sql = `
+      SELECT 
+        user_id,
+        user_code, 
+        user_role, 
+        user_fn, 
+        user_ln, 
+        email, 
+        stud_course,
+        created_at AS registeredDate
+      FROM tbl_users
+      WHERE user_code = ?
+      LIMIT 1
+    `;
+    const [rows] = await db.execute(sql, [user_code]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.status(200).json(rows[0]);
+
+  } catch (error) {
+    console.error('Error fetching student:', error);
+    res.status(500).json({ message: 'Server error while fetching student' });
+  }
+};
+
+// Assign role (student → staff)
 exports.assignRole = async (req, res) => {
   try {
-    const { user_code } = req.params; // Get user_code from URL parameter
-    const { newRole } = req.body; // Get the new role from the request body
+    const { user_code } = req.params;
+    const { newRole } = req.body;
 
-    // 1. Validate the new role. For now, we only allow assigning to 'staff'.
-    if (newRole !== 'staff') {
-      return res.status(400).json({ message: "Invalid role assignment. Only 'staff' is allowed." });
+    if (!['staff', 'student'].includes(newRole)) {
+      return res.status(400).json({ message: "Invalid role. Only 'staff' or 'student' allowed." });
     }
 
-    // 2. Define the SQL query to update the user's role.
-    // This query targets a user by their user_code and ensures they are currently a 'student' or 'uo_staff'.
     const sql = `
-            UPDATE tbl_users 
-            SET user_role = ? 
-            WHERE user_code = ? AND (user_role = 'student' OR user_role = 'uo_staff')
-        `;
+      UPDATE tbl_users
+      SET user_role = ?
+      WHERE user_code = ? AND user_role IN ('student', 'uo_staff')
+    `;
 
-    // 3. Execute the query
     const [result] = await db.execute(sql, [newRole, user_code]);
 
-    // 4. Check if any row was actually updated.
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "User not found or not eligible for role change." });
+      return res.status(404).json({ message: "User not found or role not eligible for change." });
     }
 
-    res.status(200).json({ message: `User ${user_code} has been successfully assigned as ${newRole}.` });
+    res.status(200).json({ message: `User ${user_code} updated to ${newRole}` });
 
   } catch (error) {
     console.error("Error assigning role:", error);
     res.status(500).json({ message: "Server error during role assignment." });
+  }
+};
+
+// Delete student
+exports.deleteStudent = async (req, res) => {
+  try {
+    const { user_code } = req.params;
+
+    const sql = `DELETE FROM tbl_users WHERE user_code = ?`;
+    const [result] = await db.execute(sql, [user_code]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.status(200).json({ message: `Student ${user_code} deleted successfully.` });
+  } catch (error) {
+    console.error('Error deleting student:', error);
+    res.status(500).json({ message: 'Server error while deleting student' });
   }
 };

@@ -15,6 +15,7 @@ import Home from "./pages/Home.jsx";
 import Dashboard from "./pages/admin/Dashboard.jsx";
 import TaskSubmissionList from "./pages/admin/Tasks/page.jsx";
 import MaterialsTable from "./pages/admin/Materials/page.jsx";
+import StudentListTable from "./pages/admin/Students/page.jsx";
 
 
 function App() {
@@ -86,6 +87,16 @@ function AppContent() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/students"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]} >
+            <StudentListTable />
+          </ProtectedRoute>
+        }
+      />
+
+        
 
 
      
