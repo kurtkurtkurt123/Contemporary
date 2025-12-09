@@ -22,16 +22,24 @@ export default function StudentListTable() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const itemsPerPage = 10;
 
-  // Fetch students from backend (do not change this)
+  // Fetch students and normalize data
   const fetchStudents = async () => {
     try {
       const res = await fetch('http://localhost:5000/api/student/get');
       const result = await res.json();
+
       if (result.success) {
-        console.log(result.data);
-        setStudents(result.data);
+        const mappedStudents = result.data.map(s => ({
+          id: s.user_code,
+          name: `${s.user_fn} ${s.user_ln}`,
+          email: s.email,
+          course: s.course,
+          registeredDate: s.registeredDate,
+          role: s.user_role === "uo_staff" ? "Staff" : "Student",
+        }));
+        setStudents(mappedStudents);
       } else {
-        toast.error(result.message || 'Failed to fetch student');
+        toast.error(result.message || 'Failed to fetch students');
       }
     } catch (error) {
       console.error(error);
@@ -43,16 +51,9 @@ export default function StudentListTable() {
     fetchStudents();
   }, []);
 
-  // Dropdowns
-  const uniqueSections = useMemo(
-    () => ["All", ...new Set(students.map(s => s.course))],
-    [students]
-  );
-
-  const uniqueRoles = useMemo(
-    () => ["All", ...new Set(students.map(s => s.role))],
-    [students]
-  );
+  // Dropdown options
+  const uniqueSections = useMemo(() => ["All", ...new Set(students.map(s => s.course))], [students]);
+  const uniqueRoles = useMemo(() => ["All", ...new Set(students.map(s => s.role))], [students]);
 
   // Filtered & paginated students
   const filteredStudents = useMemo(() => {
@@ -61,11 +62,8 @@ export default function StudentListTable() {
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.id.includes(searchQuery);
 
-      const matchesSection =
-        filters.section === "All" || s.course === filters.section;
-
-      const matchesRole =
-        filters.role === "All" || s.role === filters.role;
+      const matchesSection = filters.section === "All" || s.course === filters.section;
+      const matchesRole = filters.role === "All" || s.role === filters.role;
 
       return matchesSearch && matchesSection && matchesRole;
     });
@@ -87,12 +85,11 @@ export default function StudentListTable() {
     setIsModalOpen(true);
   };
 
-  if (!user)
-    return (
-      <div className="text-center mt-32 text-white text-xl">
-        You must be logged in to view this page.
-      </div>
-    );
+  if (!user) return (
+    <div className="text-center mt-32 text-white text-xl">
+      You must be logged in to view this page.
+    </div>
+  );
 
   return (
     <>
@@ -114,41 +111,28 @@ export default function StudentListTable() {
                   type="text"
                   placeholder="Search Students"
                   value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                   className="w-full p-2 pl-10 bg-[#4A56A3] text-white rounded-lg text-sm outline-none shadow"
                 />
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white h-5" />
               </div>
 
-              {/* Course Filter */}
+              {/* Section Filter */}
               <select
                 value={filters.section}
-                onChange={(e) => {
-                  setFilters(prev => ({ ...prev, section: e.target.value }));
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => { setFilters(prev => ({ ...prev, section: e.target.value })); setCurrentPage(1); }}
                 className="bg-[#4A56A3] text-white p-2 rounded-lg text-sm shadow outline-none cursor-pointer"
               >
-                {uniqueSections.map(section => (
-                  <option key={section}>{section}</option>
-                ))}
+                {uniqueSections.map(section => <option key={section}>{section}</option>)}
               </select>
 
               {/* Role Filter */}
               <select
                 value={filters.role}
-                onChange={(e) => {
-                  setFilters(prev => ({ ...prev, role: e.target.value }));
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => { setFilters(prev => ({ ...prev, role: e.target.value })); setCurrentPage(1); }}
                 className="bg-[#4A56A3] text-white p-2 rounded-lg text-sm shadow outline-none cursor-pointer"
               >
-                {uniqueRoles.map(role => (
-                  <option key={role}>{role}</option>
-                ))}
+                {uniqueRoles.map(role => <option key={role}>{role}</option>)}
               </select>
             </div>
 
@@ -170,11 +154,7 @@ export default function StudentListTable() {
             <thead className="bg-[#3C467B] text-white">
               <tr>
                 {["Student ID", "Name", "Course", "Email", "Registered Date", "Role", ""].map(header => (
-                  <th
-                    key={header}
-                    className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${header === "" ? "text-right" : ""
-                      }`}
-                  >
+                  <th key={header} className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${header === "" ? "text-right" : ""}`}>
                     {header}
                   </th>
                 ))}
@@ -188,67 +168,43 @@ export default function StudentListTable() {
                     No results found.
                   </td>
                 </tr>
-              ) : (
-                paginatedStudents.map(student => (
-                  <tr key={student.id} className="hover:bg-gray-50 transition duration-150">
-                    <td className="px-6 py-4">{student.id}</td>
-                    <td className="px-6 py-4">{student.name}</td>
-                    <td className="px-6 py-4">{student.course}</td>
-                    <td className="px-6 py-4">{student.email}</td>
-                    <td className="px-6 py-4">{student.registeredDate ? new Date(student.registeredDate).toLocaleDateString() : "---"}</td>
-
-                    {/* Role Badge */}
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${student.role === "Student"
-                          ? "bg-blue-100 text-blue-700"
-                          : student.role === "Staff"
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-gray-100 text-gray-700"
-                          }`}
-                      >
-                        {student.role}
-                      </span>
-                    </td>
-
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleEllipsisClick(student.id)}>
-                        <EllipsisVerticalIcon className="h-5 w-5 text-gray-600 hover:text-[#3C467B]" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ) : paginatedStudents.map(student => (
+                <tr key={student.id} className="hover:bg-gray-50 transition duration-150">
+                  <td className="px-6 py-4">{student.id}</td>
+                  <td className="px-6 py-4">{student.name}</td>
+                  <td className="px-6 py-4">{student.course}</td>
+                  <td className="px-6 py-4">{student.email}</td>
+                  <td className="px-6 py-4">{student.registeredDate ? new Date(student.registeredDate).toLocaleDateString() : "---"}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${student.role === "Student" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}`}>
+                      {student.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => handleEllipsisClick(student.id)}>
+                      <EllipsisVerticalIcon className="h-5 w-5 text-gray-600 hover:text-[#3C467B]" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
           {/* Pagination */}
           <div className="flex justify-center mt-6">
             <div className="flex items-center gap-2 bg-[#3C467B] p-3 rounded-lg">
-              <button
-                className="text-white px-2 hover:opacity-80"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              >
+              <button className="text-white px-2 hover:opacity-80" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
                 <ChevronLeftIcon className="h-5 w-5" />
               </button>
 
               {pagesArray.map(num => (
-                <button
-                  key={num}
-                  onClick={() => setCurrentPage(num)}
-                  className={`w-8 h-8 rounded-lg text-sm transition ${num === currentPage
-                    ? "bg-white text-[#3C467B]"
-                    : "text-white hover:bg-[#4A56A3]"
-                    }`}
-                >
+                <button key={num} onClick={() => setCurrentPage(num)}
+                  className={`w-8 h-8 rounded-lg text-sm transition ${num === currentPage ? "bg-white text-[#3C467B]" : "text-white hover:bg-[#4A56A3]"}`}>
                   {num}
                 </button>
               ))}
 
-              <button
-                className="text-white px-2 hover:opacity-80"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              >
+              <button className="text-white px-2 hover:opacity-80" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}>
                 <ChevronRightIcon className="h-5 w-5" />
               </button>
             </div>
@@ -256,7 +212,7 @@ export default function StudentListTable() {
         </div>
       </div>
 
-      {/* STUDENT MODAL */}
+      {/* Modal */}
       {selectedStudent && (
         <StudentInfoModal
           isOpen={isModalOpen}

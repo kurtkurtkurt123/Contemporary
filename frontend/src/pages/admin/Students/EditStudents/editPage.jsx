@@ -18,7 +18,6 @@ export default function StudentInfoModal({ isOpen, onClose, student, onUpdate })
     if (!isOpen || !student) return;
 
     setLoading(true);
-
     const { id, name, email, course, registeredDate, role } = student;
 
     setFormData({
