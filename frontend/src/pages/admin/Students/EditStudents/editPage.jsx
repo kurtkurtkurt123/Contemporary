@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function StudentInfoModal({ isOpen, onClose, studentId, onUpdate }) {
+export default function StudentInfoModal({ isOpen, onClose, student, onUpdate }) {
   const [loading, setLoading] = useState(false);
   const [isStaff, setIsStaff] = useState(false);
   const [formData, setFormData] = useState({
     studentId: '',
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     courseSection: '',
     dateRegistered: '',
@@ -16,39 +15,30 @@ export default function StudentInfoModal({ isOpen, onClose, studentId, onUpdate 
   });
 
   useEffect(() => {
-    if (!isOpen || !studentId) return;
+    if (!isOpen || !student) return;
 
-    const fetchStudent = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`http://localhost:5000/api/students/${studentId}`);
-        if (!res.ok) throw new Error('Failed to fetch student');
+    setLoading(true);
 
-        const data = await res.json();
-        setFormData({
-          studentId: data.user_code || '',
-          firstName: data.user_fn || '',
-          lastName: data.user_ln || '',
-          email: data.email || '',
-          courseSection: data.stud_course || '',
-          dateRegistered: data.registeredDate ? new Date(data.registeredDate).toLocaleDateString() : '',
-          role: data.user_role || 'Student',
-        });
-        setIsStaff(data.user_role?.toLowerCase() === 'staff');
-      } catch (error) {
-        console.error(error);
-        toast.error('Error fetching student data');
-      } finally {
-        setLoading(false);
-      }
-    };
+    const { id, name, email, course, registeredDate, role } = student;
 
-    fetchStudent();
-  }, [isOpen, studentId]);
+    setFormData({
+      studentId: id || '',
+      name: name || '',
+      email: email || '',
+      courseSection: course || '',
+      dateRegistered: registeredDate ? new Date(registeredDate).toLocaleDateString() : '',
+      role: role || 'Student',
+    });
+
+    setIsStaff(role?.toLowerCase() === 'staff');
+
+    setLoading(false);
+  }, [isOpen, student]);
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/students/assign/${formData.studentId}`, {
+      setLoading(true);
+      const res = await fetch(`http://localhost:5000/api/student/assign/${formData.studentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newRole: isStaff ? 'staff' : 'student' }),
@@ -61,6 +51,8 @@ export default function StudentInfoModal({ isOpen, onClose, studentId, onUpdate 
     } catch (error) {
       console.error(error);
       toast.error('Error updating student role');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,7 +60,8 @@ export default function StudentInfoModal({ isOpen, onClose, studentId, onUpdate 
     if (!confirm('Are you sure you want to delete this student?')) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/students/delete/${formData.studentId}`, { method: 'DELETE' });
+      setLoading(true);
+      const res = await fetch(`http://localhost:5000/api/student/delete/${formData.studentId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete student');
 
       toast.success('Student deleted successfully!');
@@ -77,6 +70,8 @@ export default function StudentInfoModal({ isOpen, onClose, studentId, onUpdate 
     } catch (error) {
       console.error(error);
       toast.error('Error deleting student');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,7 +96,7 @@ export default function StudentInfoModal({ isOpen, onClose, studentId, onUpdate 
               <div className="flex flex-col items-center mb-6">
                 <div className="w-40 h-40 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
                   <span className="text-6xl font-bold text-white">
-                    {formData.firstName?.[0]}{formData.lastName?.[0]}
+                    {formData.name?.split(' ')[0]?.[0]}{formData.name?.split(' ')[1]?.[0]}
                   </span>
                 </div>
               </div>
@@ -109,22 +104,31 @@ export default function StudentInfoModal({ isOpen, onClose, studentId, onUpdate 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   { label: 'Student ID', value: formData.studentId },
-                  { label: 'Firstname', value: formData.firstName },
-                  { label: 'Lastname', value: formData.lastName },
+                  { label: 'Name', value: formData.name },
                   { label: 'Email', value: formData.email },
                   { label: 'Course & Section', value: formData.courseSection },
                   { label: 'Date Registered', value: formData.dateRegistered },
                 ].map(f => (
                   <div key={f.label}>
                     <label className="block text-gray-700 font-semibold mb-2">{f.label}</label>
-                    <input type="text" value={f.value} readOnly className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed" />
+                    <input
+                      type="text"
+                      value={f.value}
+                      readOnly
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed"
+                    />
                   </div>
                 ))}
               </div>
 
               <div className="mt-6 flex items-center gap-3">
                 <label className="text-gray-700 font-semibold">Assign this student as staff</label>
-                <input type="checkbox" checked={isStaff} onChange={e => setIsStaff(e.target.checked)} className="w-5 h-5 accent-indigo-600 cursor-pointer" />
+                <input
+                  type="checkbox"
+                  checked={isStaff}
+                  onChange={e => setIsStaff(e.target.checked)}
+                  className="w-5 h-5 accent-indigo-600 cursor-pointer"
+                />
               </div>
 
               <div className="mt-6">
@@ -135,8 +139,20 @@ export default function StudentInfoModal({ isOpen, onClose, studentId, onUpdate 
               </div>
 
               <div className="flex justify-end gap-4 mt-8">
-                <button onClick={handleDelete} className="px-6 py-3 bg-red-700 hover:bg-red-800 text-white font-semibold rounded-lg shadow-md">Delete</button>
-                <button onClick={handleSave} className="px-6 py-3 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg shadow-md">Save</button>
+                <button
+                  onClick={handleDelete}
+                  className="px-6 py-3 bg-red-700 hover:bg-red-800 text-white font-semibold rounded-lg shadow-md"
+                  disabled={loading}
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-3 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg shadow-md"
+                  disabled={loading}
+                >
+                  Save
+                </button>
               </div>
             </>
           )}
