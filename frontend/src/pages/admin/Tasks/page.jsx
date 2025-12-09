@@ -8,6 +8,7 @@ import {
 import NavBar from '../../../components/public/NavBar';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
+import StudentTaskModal from './EditTask/editPage';
 
 const TaskSubmissionList = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,6 +16,8 @@ const TaskSubmissionList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [tasks, setTasks] = useState([]);
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { user, logout } = useAuth();
   const itemsPerPage = 12;
 
@@ -65,18 +68,12 @@ const TaskSubmissionList = () => {
   // Status styling
   const getStatusStyle = status => {
     if (!status) return { text: 'N/A', className: 'text-gray-600' };
-
     const normalized = status.toLowerCase();
-
     switch (normalized) {
-      case 'ontime':
-        return { text: 'On Time', className: 'text-green-600 font-semibold' };
-      case 'late':
-        return { text: 'Late', className: 'text-amber-500 font-semibold' };
-      case 'no task':
-        return { text: 'No Task', className: 'text-red-500 font-semibold' };
-      default:
-        return { text: status, className: 'text-gray-600' };
+      case 'ontime': return { text: 'On Time', className: 'text-green-600 font-semibold' };
+      case 'late': return { text: 'Late', className: 'text-amber-500 font-semibold' };
+      case 'no task': return { text: 'No Task', className: 'text-red-500 font-semibold' };
+      default: return { text: status, className: 'text-gray-600' };
     }
   };
 
@@ -87,9 +84,10 @@ const TaskSubmissionList = () => {
 
   const handleExportList = () => {
     if (!filteredData.length) return alert('No data to export.');
-    const tableHeaders = ['Task Code', 'Student Name', 'Course and Section', 'Task Submitted', 'Date Submitted', 'Status', 'Remarks'];
+    const tableHeaders = ['Task Code', 'Student ID' , 'Student Name', 'Course and Section', 'Task Submitted', 'Date Submitted', 'Status', 'Remarks'];
     const tableContent = filteredData.map(row => `<tr>
       <td>${row.taskCode}</td>
+      <td>${row.studentId}</td>
       <td>${row.studentName}</td>
       <td>${row.courseSection}</td>
       <td>${row.taskSubmitted}</td>
@@ -114,10 +112,16 @@ const TaskSubmissionList = () => {
     newWindow.onload = () => { newWindow.focus(); newWindow.print(); }
   };
 
+  const handleEllipsisClick = (taskCode) => {
+    setSelectedTaskId(taskCode);
+    setIsModalOpen(true);
+  };
+
   return (
     <>
       {user && <NavBar user={user} onLogout={logout} />}
-      <div className="p-6 pt-32 font-poppins bg-[#636CCB] font-instrument relative min-h-screen">
+      <div className="p-6 pt-32 font-poppins bg-[#636CCB] relative min-h-screen">
+        {/* Header + Filters */}
         <div className="bg-[#3C467B] text-white p-8 rounded-xl shadow-xl mb-6">
           <h1 className="text-3xl font-semibold">Student Tasks</h1>
           <p className="text-sm opacity-80 mt-1">List of all Student Activities</p>
@@ -184,42 +188,44 @@ const TaskSubmissionList = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-xl p-6">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 font-instrument">
-              <thead className="bg-[#3C467B] text-white">
-                <tr>
-                  {['Task Code', 'Student Name', 'Course and Section', 'Task Submitted', 'Date Submitted', 'Status', 'Remarks', ''].map(header => (
-                    <th key={header} className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{header}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.length === 0 ? (
-                  <tr>
-                    <td colSpan="8" className="text-center py-10 text-gray-500 text-base">No results match the current search or filters.</td>
-                  </tr>
-                ) : paginatedData.map(row => (
-                  <tr key={row.taskCode} className="hover:bg-gray-50 transition duration-150">
-                    <td className="px-6 py-4 text-sm font-medium">{row.taskCode}</td>
-                    <td className="px-6 py-4 text-sm">{row.studentName}</td>
-                    <td className="px-6 py-4 text-sm">{row.courseSection}</td>
-                    <td className="px-6 py-4 text-sm">{row.taskSubmitted}</td>
-                    <td className="px-6 py-4 text-sm">{new Date(row.dateSubmitted).toLocaleString()}</td>
-                    <td className={`px-6 py-4 text-sm ${getStatusStyle(row.status).className}`}>
-                      {getStatusStyle(row.status).text}
-                    </td>
-
-                    <td className="px-6 py-4 text-sm">{row.remarks || ''}</td>
-                    <td className="px-6 py-4 text-right">
-                      <EllipsisVerticalIcon className="h-5 w-5 text-gray-600 hover:text-[#3C467B] cursor-pointer" />
-                    </td>
-                  </tr>
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow-xl p-6 overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 font-instrument">
+            <thead className="bg-[#3C467B] text-white">
+              <tr>
+                {['Task Code', 'Student Name', 'Course and Section', 'Task Submitted', 'Date Submitted', 'Status', 'Remarks', ''].map(header => (
+                  <th key={header} className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{header}</th>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-10 text-gray-500 text-base">No results match the current search or filters.</td>
+                </tr>
+              ) : paginatedData.map(row => (
+                <tr key={row.taskCode} className="hover:bg-gray-50 transition duration-150">
+                  <td className="px-6 py-4 text-sm font-medium">{row.taskCode}</td>
+                  <td className="px-6 py-4 text-sm">{row.studentName}</td>
+                  <td className="px-6 py-4 text-sm">{row.courseSection}</td>
+                  <td className="px-6 py-4 text-sm">{row.taskSubmitted}</td>
+                  <td className="px-6 py-4 text-sm">{new Date(row.dateSubmitted).toLocaleString()}</td>
+                  <td className={`px-6 py-4 text-sm ${getStatusStyle(row.status).className}`}>
+                    {getStatusStyle(row.status).text}
+                  </td>
+                  <td className="px-6 py-4 text-sm">{row.remarks || ''}</td>
+                  <td className="px-6 py-4 text-right">
+                    <EllipsisVerticalIcon
+                      className="h-5 w-5 text-gray-600 hover:text-[#3C467B] cursor-pointer"
+                      onClick={() => handleEllipsisClick(row.taskId)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
+          {/* Pagination */}
           <div className="flex justify-center mt-6">
             <div className="flex items-center gap-2 bg-[#3C467B] p-3 rounded-lg">
               <button className="text-white px-2 hover:opacity-80 transition" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>&lt;</button>
@@ -234,6 +240,15 @@ const TaskSubmissionList = () => {
           </div>
         </div>
       </div>
+
+      {/* Student Task Modal */}
+      {selectedTaskId && (
+        <StudentTaskModal
+          taskId={selectedTaskId}
+          isOpen={isModalOpen}
+          onClose={() => { setIsModalOpen(false); setSelectedTaskId(null); }}
+        />
+      )}
     </>
   );
 };
