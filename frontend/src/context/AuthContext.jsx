@@ -1,129 +1,116 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const AuthContext = createContext(null);
 
-// =====================================================
-//  INITIAL STATE FROM LOCAL STORAGE
-// =====================================================
-const getInitialState = () => {
-    const storedToken = localStorage.getItem("authToken");
-
-    if (!storedToken) {
-        return { token: null, user: null, isAuthReady: true };
-    }
-
-    try {
-        const decoded = jwtDecode(storedToken);
-        return { token: storedToken, user: decoded, isAuthReady: true };
-    } catch (error) {
-        console.error("Invalid stored token → clearing it.");
-        localStorage.removeItem("authToken");
-        return { token: null, user: null, isAuthReady: true };
-    }
-};
-
-// =====================================================
-//  PROVIDER
-// =====================================================
 export const AuthProvider = ({ children }) => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const initial = getInitialState();
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
-    const [token, setToken] = useState(initial.token);
-    const [user, setUser] = useState(initial.user);
-    const [isAuthReady] = useState(initial.isAuthReady);
+  // ==========================
+  // Restore session from localStorage on app load
+  // ==========================
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
 
-    // ----------------------------------------------------
-    // Sync token → decode user → store in localStorage
-    // ----------------------------------------------------
-    useEffect(() => {
-        if (!token) {
-            setUser(null);
-            localStorage.removeItem("authToken");
-            return;
-        }
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+    }
 
-        try {
-            const decoded = jwtDecode(token);
-            setUser(decoded);
-            localStorage.setItem("authToken", token);
-        } catch (err) {
-            console.error("Token decode error:", err);
-            localStorage.removeItem("authToken");
-            setToken(null);
-            setUser(null);
-        }
-    }, [token]);
+    setIsAuthReady(true); // Mark auth check as done
+  }, []);
 
-    // =====================================================
-    //  LOGIN
-    // =====================================================
-    const login = async (identifier, password) => {
-        try {
-            const response = await fetch("http://localhost:5000/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ identifier, password }),
-            });
+  // ==========================
+  // LOGIN via Express API
+  // ==========================
+  const login = async (identifier, password) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
 
-            const data = await response.json();
-            console.log(data);
+      const data = await res.json();
 
-            if (!response.ok) {
-                throw new Error(data.message || "Login failed");
-            }
+      if (!res.ok) throw new Error(data.message || "Login failed");
 
-            // store token
-            setToken(data.token);
+      // Save JWT token and user info
+      setToken(data.token);
+      const userData = { role: data.role, identifier };
+      setUser(userData);
+      console.log("User data:", userData);
+      // Persist in localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(userData));
 
-            toast.success("Login successful!");
+      setIsAuthReady(true);
 
-            // ensure navigation works AFTER token is saved
-            setTimeout(() => navigate("/home"), 300);
+      toast.success("Login successful!");
+      navigate("/home");
+      return true;
+    } catch (err) {
+      console.error("Login Error:", err.message);
+      toast.error(err.message || "Login failed");
+      return false;
+    }
+  };
 
-            return true;
-        } catch (error) {
-            console.error("Login error:", error);
-            toast.error(error.message || "Server error");
-            return false;
-        }
-    };
+  // ==========================
+  // LOGOUT
+  // ==========================
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setIsAuthReady(true); // Auth check done
+    toast.success("Logged out");
+    navigate("/login");
+  };
 
-    // =====================================================
-    //  LOGOUT
-    // =====================================================
-    const logout = () => {
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem("authToken");
-        toast.success("Logged out");
+  // ==========================
+  // REGISTER via Express API
+  // ==========================
+  const register = async (userData) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
 
-        // delay to let the toast show smoothly
-        setTimeout(() => navigate("/login"), 200);
-    };
+      const data = await res.json();
 
-    const value = {
-        token,
-        user,
-        login,
-        logout,
-        isAuthenticated: !!token,
-        isAuthReady,
-    };
+      if (!res.ok) throw new Error(data.message || "Registration failed");
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+      toast.success("Registration successful! Your code: " + data.user_code);
+      return true;
+    } catch (err) {
+      console.error("Registration Error:", err.message);
+      toast.error(err.message || "Registration failed");
+      return false;
+    }
+  };
+
+  const value = {
+    token,
+    user,
+    login,
+    logout,
+    register,
+    isAuthenticated: !!token,
+    isAuthReady,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// =====================================================
-//  CUSTOM HOOK
-// =====================================================
+// Custom hook
 export const useAuth = () => useContext(AuthContext);
-

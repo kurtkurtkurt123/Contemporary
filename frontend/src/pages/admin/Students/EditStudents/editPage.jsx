@@ -20,16 +20,16 @@ export default function StudentInfoModal({ isOpen, onClose, student, onUpdate })
     setLoading(true);
     const { id, name, email, course, registeredDate, role } = student;
 
+    setIsStaff(role?.toLowerCase() === 'staff');
     setFormData({
-      studentId: id || '',
-      name: name || '',
-      email: email || '',
-      courseSection: course || '',
-      dateRegistered: registeredDate ? new Date(registeredDate).toLocaleDateString() : '',
-      role: role || 'Student',
+      studentId: id,
+      name,
+      email,
+      courseSection: course,
+      dateRegistered: registeredDate,
+      role
     });
 
-    setIsStaff(role?.toLowerCase() === 'staff');
 
     setLoading(false);
   }, [isOpen, student]);

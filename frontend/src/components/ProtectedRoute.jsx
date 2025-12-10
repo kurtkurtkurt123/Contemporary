@@ -2,35 +2,32 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext"; 
 
-// --- Inside ProtectedRoute.js ---
-
+// --- ProtectedRoute.js ---
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, token, isAuthReady } = useAuth();
   const location = useLocation();
 
-  // 1. Loading State Check (Must be first)
+  // 1. Loading State Check
   if (!isAuthReady) {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-             <h1 className="text-2xl text-gray-600">Checking credentials...</h1>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <h1 className="text-2xl text-gray-600">Checking credentials...</h1>
+      </div>
     );
   }
   
-  // 2. Authentication Check (CRITICAL: Check for both token AND user)
+  // 2. Authentication Check
   if (!token || !user) { 
-    // If no token or no user data, redirect to Login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  // 3. Role Check (This block ONLY runs if 'user' and 'token' exist)
-  if (allowedRoles) {
-  
-    const userRole = user.Role || user.user_role || user.UserType; 
+  // 3. Role Check
+  if (allowedRoles && allowedRoles.length > 0) {
+    const userRole = user.role; // ✅ Correct property from AuthContext
 
     if (!userRole) {
-         console.error("User object is valid but is missing the role property. Access denied.");
-         return <Navigate to="/unauthorized" replace />; 
+      console.error("User object is valid but is missing the role property. Access denied.");
+      return <Navigate to="/unauthorized" replace />; 
     }
 
     const normalizedUserRole = String(userRole).toLowerCase();

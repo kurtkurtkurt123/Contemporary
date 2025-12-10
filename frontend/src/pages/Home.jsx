@@ -24,6 +24,8 @@ const Home = () => {
         ); 
     }
 
+    console.log("User role:", user);
+
     return (
         <> 
         {renderNavBar()}
@@ -36,10 +38,10 @@ const Home = () => {
                         Welcome back, <span className="text-black">{user.FirstName}</span>
                     </h1>
                     <p className="text-gray-500">
-                        You are logged in as a **{user.user_role}**. This is your personalized dashboard.
+                        You are logged in as a **{user.role}**. This is your personalized dashboard.
                     </p>
                     <button onClick={logout} className="mt-6 bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition">
-                        {user.user_role === 'student' ? 'Continue Learning' : 'Start Managing'}
+                        {user.role === 'student' ? 'Continue Learning' : 'Start Managing'}
                     </button>
                 </div>
             </div>

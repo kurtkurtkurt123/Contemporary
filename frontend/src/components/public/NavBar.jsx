@@ -25,21 +25,24 @@ const UserDropdown = ({ user, logout }) => {
         navigate('/profile');
     };
     
-    const roleDisplay = (user?.user_role || user?.Role)?.toLowerCase() === 'uo_staff'
+    const roleDisplay = (user?.role || user?.role)?.toLowerCase() === 'uo_staff'
         ? 'Unofficial Staff'
-        : user?.user_role || user?.Role || 'Guest';
+        : user?.role || user?.role || 'Guest';
+    
+    const testDisplay = user.Firstname;
+   
 
     // Safely get name initials for the avatar
-    const userInitials = (user?.user_fn || 'U').charAt(0) + (user?.user_ln || 'L').charAt(0).toUpperCase();
+    const userInitials = (user?.Firstname || 'U').charAt(0) + (user?.user_ln || 'L').charAt(0).toUpperCase();
 
     return (
         <div className="relative z-50">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center space-x-2 py-2 px-3 bg-gray-200 rounded-full hover:bg-gray-300 transition"
+                className="flex items-center space-x-2 py-2 px-3 bg-gray-200 drounded-full hover:bg-gray-300 transition"
             >
                 <div className="flex items-center justify-center h-8 w-8 bg-black text-white rounded-full text-sm font-semibold">
-                    {userInitials}
+                    {userInitials} {testDisplay}
                 </div>
                 {/* Name is hidden on mobile to save space, but visible in the dropdown */}
                 <span className="text-gray-800 font-medium hidden md:inline">{user?.user_fn}</span> 

@@ -30,12 +30,12 @@ export default function StudentListTable() {
 
       if (result.success) {
         const mappedStudents = result.data.map(s => ({
-          id: s.user_code,
-          name: `${s.user_fn} ${s.user_ln}`,
-          email: s.email,
-          course: s.course,
-          registeredDate: s.registeredDate,
-          role: s.user_role === "uo_staff" ? "Staff" : "Student",
+          id: s.id || "",
+          name: s.name || "",
+          email: s.email || "",
+          course: s.course || "",
+          registeredDate: s.registeredDate || "",
+          role: s.role || "Student",
         }));
         setStudents(mappedStudents);
       } else {
