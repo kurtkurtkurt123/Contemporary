@@ -16,6 +16,9 @@ import Dashboard from "./pages/admin/Dashboard.jsx";
 import TaskSubmissionList from "./pages/admin/Tasks/page.jsx";
 import MaterialsTable from "./pages/admin/Materials/page.jsx";
 import StudentListTable from "./pages/admin/Students/page.jsx";
+import ActivityCards from "./pages/student/activity/activityPage.jsx";
+
+
 
 
 function App() {
@@ -96,11 +99,17 @@ function AppContent() {
         }
       />
 
-        
+      {/* STUDENT ROUTES */}
+      <Route
+        path="/activities"
+        element={
+          <ProtectedRoute allowedRoles={["student"]} >
+            <ActivityCards />
+          </ProtectedRoute>
+        }
+      />
 
 
-     
-    
       {/* 404 */}
       <Route path="*" element={<h1>404 Page Not Found</h1>} />
     </Routes>

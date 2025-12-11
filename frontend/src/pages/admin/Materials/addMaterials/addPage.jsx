@@ -140,7 +140,6 @@ const AddMaterial = ({ isOpen, onClose }) => {
             <label className="block text-sm font-medium mb-1">Upload PDF</label>
             <input
               type="file"
-              accept="application/pdf"
               onChange={handleFileChange}
               className="w-full"
               required

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -38,19 +39,23 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Login failed");
 
-      // Save JWT token and user info
+      // Use the returned user info directly
+      const userData = {
+        user_id: data.user_id,
+        user_code: data.user_code,
+        role: data.role,
+        user_fn: data.user_fn,
+        user_ln: data.user_ln,
+        email: data.email || "",
+      };
+
       setToken(data.token);
-      const userData = { role: data.role, identifier };
       setUser(userData);
-      console.log("User data:", userData);
-      // Persist in localStorage
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(userData));
-
-      setIsAuthReady(true);
 
       toast.success("Login successful!");
       navigate("/home");
@@ -61,6 +66,7 @@ export const AuthProvider = ({ children }) => {
       return false;
     }
   };
+
 
   // ==========================
   // LOGOUT

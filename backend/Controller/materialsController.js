@@ -131,9 +131,28 @@ const updateMaterial = async (req, res) => {
       const ext = req.file.originalname.split(".").pop();
       newFilePath = `${item_code}/${uuidv4()}.${ext}`;
 
-      // Delete old file if exists
-      if (existing.item_file) {
-        await supabase.storage.from("materials").remove([existing.item_file]);
+      // Delete old file if exists (handle URLs like deleteMaterial)
+      if (existing?.item_file) {
+        let relativePath = existing.item_file;
+
+        if (relativePath.startsWith("http")) {
+          const parts = relativePath.split("/materials/");
+          if (parts.length === 2) {
+            relativePath = parts[1];
+          } else {
+            console.error("Invalid file URL format:", relativePath);
+            return res.status(400).json({ success: false, message: "Invalid existing file URL" });
+          }
+        }
+
+        const { error: storageErr } = await supabase.storage
+          .from("materials")
+          .remove([relativePath]);
+
+        if (storageErr) {
+          console.error("Failed to delete existing file:", storageErr);
+          return res.status(500).json({ success: false, message: "Failed to delete old file from storage." });
+        }
       }
 
       // Upload new file

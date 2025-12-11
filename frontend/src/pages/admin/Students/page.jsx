@@ -10,6 +10,7 @@ import { useAuth } from '../../../context/AuthContext';
 import NavBar from '../../../components/public/NavBar';
 import StudentInfoModal from './EditStudents/editPage';
 import toast from 'react-hot-toast';
+import * as XLSX from "xlsx";
 
 export default function StudentListTable() {
   const { user, logout } = useAuth();
@@ -84,6 +85,42 @@ export default function StudentListTable() {
     setSelectedStudent(student);
     setIsModalOpen(true);
   };
+
+const exportToExcel = () => {
+  try {
+    if (filteredStudents.length === 0) {
+      toast.error("No data available to export.");
+      return;
+    }
+
+    // Convert to worksheet
+    const worksheet = XLSX.utils.json_to_sheet(
+      filteredStudents.map(s => ({
+        "Student ID": s.id,
+        "Name": s.name,
+        "Course": s.course,
+        "Email": s.email,
+        "Registered Date": s.registeredDate
+          ? new Date(s.registeredDate).toLocaleDateString()
+          : "",
+        "Role": s.role,
+      }))
+    );
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+
+    // Download
+    XLSX.writeFile(workbook, "Student_List.xlsx");
+
+    toast.success("Excel exported successfully");
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to export Excel file");
+  }
+};
+
 
   if (!user) return (
     <div className="text-center mt-32 text-white text-xl">

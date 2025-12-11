@@ -13,6 +13,8 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
     newFile: null,
   });
 
+  const [previewFile, setPreviewFile] = useState(""); // New: preview URL
+
   // Fetch single material
   useEffect(() => {
     if (!isOpen || !id) return;
@@ -40,6 +42,7 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
           fileUrl: mat.fileUrl || "",
           newFile: null,
         });
+        setPreviewFile(mat.fileUrl || "");
       } catch (err) {
         console.error(err);
         toast.error("Server error");
@@ -56,9 +59,11 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
     const file = e.target.files[0];
     if (file && file.type !== "application/pdf") {
       toast.error("Only PDF files are allowed");
+      e.target.value = null;
       return;
     }
     setFormData({ ...formData, newFile: file });
+    if (file) setPreviewFile(URL.createObjectURL(file)); // Update preview
   };
 
   // Submit update
@@ -115,17 +120,21 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
   };
 
   // Open PDF in new tab (public URL)
-  const openMaterial = () => {
-    if (!formData.fileUrl) {
+  // Open PDF in new tab (prioritize newly uploaded file)
+  const viewFile = () => {
+    const fileToOpen = formData.newFile ? previewFile : formData.fileUrl;
+
+    if (!fileToOpen) {
       toast.error("No PDF file found");
       return;
     }
-    window.open(formData.fileUrl, "_blank");
+
+    window.open(fileToOpen, "_blank"); // opens in new tab
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh]">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-auto">
         {/* Header */}
         <div className="bg-indigo-500 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
           <h2 className="text-xl font-semibold">Edit Material</h2>
@@ -134,7 +143,7 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
           </button>
         </div>
 
-        <div className="p-6 space-y-6 overflow-y-auto h-[80vh]">
+        <div className="p-6 space-y-6 overflow-y-auto h-[70vh]">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium mb-2">Name</label>
@@ -191,18 +200,36 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
             </div>
           </div>
 
-          {/* File */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-2">Upload New PDF</label>
-            <input type="file" onChange={handleFileChange} className="w-full" />
-
+          {/* File Upload & View */}
+          <div className="mt-4 flex items-center space-x-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium mb-2">Upload New PDF</label>
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileChange}
+                className="w-full"
+              />
+            </div>
             <button
-              onClick={openMaterial}
-              className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded"
+              onClick={viewFile}
+              className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
             >
-              Open PDF in New Tab
+              View File
             </button>
           </div>
+
+          {/* Preview (small for newly uploaded file only) */}
+          {formData.newFile && previewFile && (
+            <div className="mt-2">
+              <p className="text-sm font-medium mb-1">Preview of New File:</p>
+              <iframe
+                src={previewFile}
+                title="PDF Preview"
+                className="w-48 h-48 border rounded"
+              />
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-between pt-4 border-t">
