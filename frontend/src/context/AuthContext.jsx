@@ -5,11 +5,14 @@ import toast from "react-hot-toast";
 
 const AuthContext = createContext(null);
 
+// IDAGDAG ANG LINYA NA ITO (Kukunin ang Render API URL mula sa .env)
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken, ] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   // ==========================
@@ -32,7 +35,8 @@ export const AuthProvider = ({ children }) => {
   // ==========================
   const login = async (identifier, password) => {
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      // API CALL UPDATED: Gumagamit na ng API_URL variable
+      const res = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password }),
@@ -86,7 +90,8 @@ export const AuthProvider = ({ children }) => {
   // ==========================
   const register = async (userData) => {
     try {
-      const res = await fetch("http://localhost:5000/api/register", {
+      // API CALL UPDATED: Gumagamit na ng API_URL variable
+      const res = await fetch(`${API_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),

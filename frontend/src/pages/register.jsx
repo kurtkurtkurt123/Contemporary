@@ -6,6 +6,9 @@ import { ArrowRightIcon, ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons
 import GlobeImage from '../assets/images/globe.png';
 import '../assets/styles/login.css';
 
+// IDAGDAG ANG LINYA NA ITO (Kukunin ang Render API URL mula sa .env)
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 const Register = () => {
     const navigate = useNavigate();
     
@@ -13,11 +16,11 @@ const Register = () => {
     
     // 💡 FIXED: State keys now match the backend controller (snake_case/shorthand)
     const [formData, setFormData] = useState({
-        stud_id: "",     // Used for StudentID
-        user_ln: "",     // Used for LastName
-        user_fn: "",     // Used for FirstName
-        email: "",       // Used for EmailAddress
-        password: "",    // Used for Password
+        stud_id: "",    // Used for StudentID
+        user_ln: "",    // Used for LastName
+        user_fn: "",    // Used for FirstName
+        email: "",      // Used for EmailAddress
+        password: "",   // Used for Password
         stud_course: "", // Used for Course
         user_role: "student" // Used for Role
     });
@@ -85,7 +88,9 @@ const Register = () => {
             if (!payload.stud_course) {
                 delete payload.stud_course;
             }
-            await axios.post("http://localhost:5000/api/register", payload);
+            
+            // API CALL UPDATED: Gumagamit na ng API_URL variable
+            await axios.post(`${API_URL}/api/register`, payload);
             
             toast.success("Registered successfully! You can now login.");
             navigate("/login");
@@ -109,24 +114,24 @@ const Register = () => {
             {/* Left Side (Globe and Text) ... */}
             <div className="hidden lg:flex w-1/2 p-10 flex-col justify-center items-center pl-20">
             
-                    {/* Globe Image Placeholder */}
-                    <div className="w-[300px] h-[300px] mb-8">
-                      <img
-                        src={GlobeImage} // Use imported image path
-                        alt="Global Network"
-                        className="w-full h-full object-contain drop-shadow-lg"
-                      />
-                    </div>
+                {/* Globe Image Placeholder */}
+                <div className="w-[300px] h-[300px] mb-8">
+                  <img
+                    src={GlobeImage} // Use imported image path
+                    alt="Global Network"
+                    className="w-full h-full object-contain drop-shadow-lg"
+                  />
+                </div>
             
-                    <div className="text-left"> {/* Changed text-right to text-left for consistency */}
-                      <h2 className="text-white text-3xl font-light tracking-widest">
-                        SOCSCI 3
-                      </h2>
-                      <h1 className="text-white text-4xl font-extrabold mt-1">
-                        Learning Management System
-                      </h1>
-                    </div>
-                  </div>
+                <div className="text-left"> {/* Changed text-right to text-left for consistency */}
+                  <h2 className="text-white text-3xl font-light tracking-widest">
+                    SOCSCI 3
+                  </h2>
+                  <h1 className="text-white text-4xl font-extrabold mt-1">
+                    Learning Management System
+                  </h1>
+                </div>
+              </div>
             
 
             {/* Right Side: Register Panel (Glassmorphism) */}
@@ -209,7 +214,7 @@ const Register = () => {
 
                                 {/* Role Selection Dropdown */}
                                 <div className="pt-2">
-                                    <label htmlFor="user_role" className="text-white  text-base block mb-1 font-medium">Registering as:</label>
+                                    <label htmlFor="user_role" className="text-white  text-base block mb-1 font-medium">Registering as:</label>
                                     {/* 💡 FIXED: name="user_role" and id="user_role" */}
                                     <select
                                         id="user_role"
@@ -217,7 +222,7 @@ const Register = () => {
                                         value={formData.user_role}
                                         onChange={handleChange}
                                         required
-                                        className={`${inputClass}  appearance-none cursor-pointer pr-10`}
+                                        className={`${inputClass}  appearance-none cursor-pointer pr-10`}
                                     >
                                         <option value="student" className="bg-black hover:bg-black/10">Student</option>
                                         <option value="uo_staff" className="bg-black hover:bg-black/10">Staff</option>

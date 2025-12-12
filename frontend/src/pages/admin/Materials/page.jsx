@@ -15,6 +15,9 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline';
 
+// IDAGDAG ANG LINYA NA ITO (Kukunin ang Render API URL mula sa .env)
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 const MaterialsTable = () => {
   const { user, logout } = useAuth();
   const [materials, setMaterials] = useState([]);
@@ -56,7 +59,8 @@ const MaterialsTable = () => {
   // Fetch materials from API
   const fetchMaterials = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/material/get');
+      // API CALL UPDATED: Gumagamit na ng API_URL variable
+      const res = await fetch(`${API_URL}/api/material/get`);
       const result = await res.json();
       if (result.success) {
         setMaterials(result.data);
@@ -114,7 +118,7 @@ const MaterialsTable = () => {
   const handleAddMaterial = () => setIsAddModalOpen(true);
   const handleCloseAddMaterial = () => {
     setIsAddModalOpen(false);
-    fetchMaterials();
+    fetchMaterials(); // Reload materials after adding
   };
 
   const handleOpenEditMaterial = (id) => {
@@ -125,7 +129,7 @@ const MaterialsTable = () => {
   const handleCloseEditMaterial = () => {
     setIsEditModalOpen(false);
     setEditMaterialId(null);
-    fetchMaterials();
+    fetchMaterials(); // Reload materials after editing
   };
 
   // Print

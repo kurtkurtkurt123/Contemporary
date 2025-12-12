@@ -1,7 +1,11 @@
 // src/services/materialsService.js
 import axios from "axios";
 
-const API = "http://localhost:5000/api/material";
+// IDAGDAG ANG LINYA NA ITO (Kukunin ang Render API URL mula sa .env)
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
+// PALITAN ANG BASE URL: Gumagamit na ng API_URL
+const API = `${API_URL}/api/material`;
 
 export const createMaterial = async (payload) => {
   return await axios.post(`${API}/create`, payload);
