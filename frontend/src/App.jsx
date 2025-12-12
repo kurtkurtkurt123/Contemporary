@@ -1,42 +1,30 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
-// Auth
+// Auth Context
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Auth Pages
+// --- AUTH/CORE PAGES ---
 import Login from "./pages/login.jsx";
 import Register from "./pages/register.jsx";
 import Unauthorized from "./pages/Unauthorized.jsx";
 import Home from "./pages/Home.jsx";
 
-// Admin Pages
+// --- ADMIN PAGES ---
 import Dashboard from "./pages/admin/Dashboard.jsx";
 import TaskSubmissionList from "./pages/admin/Tasks/page.jsx";
 import MaterialsTable from "./pages/admin/Materials/page.jsx";
 import StudentListTable from "./pages/admin/Students/page.jsx";
-import ActivityCards from "./pages/student/activity/activityPage.jsx";
 
-<<<<<<< HEAD
-// Imports ng Pages - KELANGAN TUMUGMA SA FILE NAME (CASE-SENSITIVE!)
-import Login from "./pages/login.jsx";       
-import Register from "./pages/register.jsx"; 
-import Unauthorized from "./pages/Unauthorized.jsx"; 
-import Home from "./pages/Home.jsx"; 
-// REMOVED: import AboutPage from "./pages/AboutPage.jsx"; 
+// --- STUDENT PAGES ---
+import StudentDashboard from "./pages/StudentDashboard.jsx"; // Assuming this is used instead of Admin Dashboard for students
+import ActivityCards from "./pages/student/activity/activityPage.jsx";
 import LessonPage from "./pages/LessonsPage.jsx"; 
 import ActivitiesPage from "./pages/ActivitiesPage.jsx"; 
-import StudentDashboard from "./pages/StudentDashboard.jsx"; 
 
-// Placeholder Components
-const AdminDashboard = () => <h1>Admin Dashboard Placeholder</h1>;
-const InstructorDashboard = () => <h1>InstructorDashboard Placeholder</h1>;
-// REMOVED: AboutPage placeholder definition
-=======
 
->>>>>>> test/supabase-migration
-
+// =========================================================================
 
 function App() {
   return (
@@ -63,27 +51,17 @@ function AppContent() {
     );
   }
 
-<<<<<<< HEAD
-    return (
-        <Routes>
-            {/* --- PUBLIC ROUTES --- */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/home" element={<Home />} />
-            {/* REMOVED: <Route path="/about" element={<AboutPage />} /> */} 
-=======
   return (
     <Routes>
-      {/* PUBLIC ROUTES */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* --- PUBLIC ROUTES --- */}
+      {/* Default route redirects to login */}
+      <Route path="/" element={<Navigate to="/login" replace />} /> 
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
-    
->>>>>>> test/supabase-migration
+      
 
-      {/* PROTECTED GENERAL ROUTE */}
+      {/* --- PROTECTED GENERAL ROUTES --- */}
       <Route
         path="/home"
         element={
@@ -93,13 +71,7 @@ function AppContent() {
         }
       />
 
-<<<<<<< HEAD
-            {/* --- PROTECTED SPECIFIC ROUTES (STUDENT) --- */}
-            <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['Student']}><StudentDashboard /></ProtectedRoute>} />
-            <Route path="/lessons" element={<ProtectedRoute allowedRoles={['Student']}><LessonPage /></ProtectedRoute>} />
-            <Route path="/activities" element={<ProtectedRoute allowedRoles={['Student']}><ActivitiesPage /></ProtectedRoute>} />
-=======
-      {/* ADMIN ROUTES */}
+      {/* --- ADMIN ROUTES (Protected by 'admin' role) --- */}
       <Route
         path="/dashboard"
         element={
@@ -132,9 +104,16 @@ function AppContent() {
           </ProtectedRoute>
         }
       />
->>>>>>> test/supabase-migration
 
-      {/* STUDENT ROUTES */}
+      {/* --- STUDENT ROUTES (Protected by 'student' role) --- */}
+      <Route
+        path="/student-dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["student"]} >
+            <StudentDashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/activities"
         element={
@@ -143,9 +122,24 @@ function AppContent() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/lessons"
+        element={
+          <ProtectedRoute allowedRoles={["student"]} >
+            <LessonPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student-activities"
+        element={
+          <ProtectedRoute allowedRoles={["student"]} >
+            <ActivitiesPage />
+          </ProtectedRoute>
+        }
+      />
 
-
-      {/* 404 */}
+      {/* --- 404 CATCH-ALL --- */}
       <Route path="*" element={<h1>404 Page Not Found</h1>} />
     </Routes>
   );
