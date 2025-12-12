@@ -66,13 +66,7 @@ const UserDropdown = ({ user, logout }) => {
                         <p className="text-xs text-gray-300 truncate">{userCode}</p>
                     </div>
 
-                    <button
-                        onClick={handleViewProfile}
-                        className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition"
-                    >
-                        <UserCircleIcon className="h-5 w-5 mr-3 text-gray-500" />
-                        View Profile
-                    </button>
+                   
                     <button
                         onClick={handleLogout}
                         className="flex items-center w-full px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition"
