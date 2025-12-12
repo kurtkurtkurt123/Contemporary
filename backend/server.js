@@ -6,9 +6,20 @@ dotenv.config();
 const supabase = require("./config/supabase"); 
 const app = express();
 
+// --- START: MODIFIED CORS CONFIGURATION ---
+// Gagamitin ang FRONTEND_URL na iseset sa Render.com
+const corsOptions = {
+  // Ang 'origin' ay ang inyong Netlify URL
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions)); // Gagamitin ang corsOptions
 app.use(express.json());
+// --- END: MODIFIED CORS CONFIGURATION ---
 
 // Routes
 app.use("/api", require("./routes/auth"));
