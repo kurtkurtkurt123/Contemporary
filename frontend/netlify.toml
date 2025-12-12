@@ -1,0 +1,9 @@
+[build]
+  # SABIHIN KAY NETLIFY: SIMULAN MO LAHAT NG TRABAHO DITO
+  base = "frontend"
+  
+  # SABIHIN KAY NETLIFY: ITO ANG BUILD COMMAND
+  command = "npm run build"
+  
+  # SABIHIN KAY NETLIFY: DITO ANG FINAL WEBSITE FILES
+  publish = "dist"
