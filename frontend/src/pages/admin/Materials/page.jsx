@@ -118,7 +118,7 @@ const MaterialsTable = () => {
   const handleAddMaterial = () => setIsAddModalOpen(true);
   const handleCloseAddMaterial = () => {
     setIsAddModalOpen(false);
-    fetchMaterials(); // Reload materials after adding
+    fetchMaterials();
   };
 
   const handleOpenEditMaterial = (id) => {
@@ -129,7 +129,7 @@ const MaterialsTable = () => {
   const handleCloseEditMaterial = () => {
     setIsEditModalOpen(false);
     setEditMaterialId(null);
-    fetchMaterials(); // Reload materials after editing
+    fetchMaterials();
   };
 
   // Print
