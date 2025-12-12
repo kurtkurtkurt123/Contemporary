@@ -1,4 +1,4 @@
-const db = require("../config/mysql");
+const supabase = require("../config/supabase");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
@@ -7,10 +7,11 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 
 // ===============================
-// REGISTER CONTROLLER
+// REGISTER CONTROLLER (SUPABASE)
 // ===============================
 
 exports.registerUser = async (req, res) => {
+<<<<<<< HEAD
     try {
         const {
             user_role, user_fn, user_ln,
@@ -91,55 +92,143 @@ exports.registerUser = async (req, res) => {
         }
 
         res.status(500).json({ message: "Server error during registration." });
+=======
+  try {
+    const {
+      user_role, user_fn, user_ln,
+      email, password, stud_id, stud_course
+    } = req.body;
+
+    const allowedRoles = ["admin", "student", "staff", "uo_staff"];
+    if (!allowedRoles.includes(user_role.toLowerCase())) {
+      return res.status(400).json({
+        message: "Invalid role. Allowed roles: admin, student, staff, uo_staff."
+      });
+>>>>>>> test/supabase-migration
     }
+
+    // Check if email already exists
+    const { data: existing, error: checkErr } = await supabase
+      .from("tbl_users")
+      .select("email")
+      .eq("email", email)
+      .limit(1);
+
+    if (checkErr) throw checkErr;
+
+    if (existing && existing.length > 0) {
+      return res.status(409).json({ message: "Email already exists." });
+    }
+
+    // Get last user_id
+    const { data: lastUser, error: lastErr } = await supabase
+      .from("tbl_users")
+      .select("user_id")
+      .order("user_id", { ascending: false })
+      .limit(1);
+
+    if (lastErr) throw lastErr;
+
+    let increment = lastUser.length > 0 ? lastUser[0].user_id + 1 : 1;
+    const newCode = String(increment).padStart(4, "0");
+
+    const user_code = `LMS-${stud_id || "0000"}-${newCode}`;
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user
+    const { error: insertErr } = await supabase
+      .from("tbl_users")
+      .insert({
+        user_code,
+        user_role: user_role.toLowerCase(),
+        user_fn,
+        user_ln,
+        email,
+        password: hashedPassword,
+        stud_id: stud_id || null,
+        stud_course: stud_course || null
+      });
+
+    if (insertErr) throw insertErr;
+
+    res.status(201).json({
+      message: "User registered successfully.",
+      user_code
+    });
+
+  } catch (error) {
+    console.error("Registration Error:", error.message);
+    res.status(500).json({ message: "Server error during registration." });
+  }
 };
 
 // ===============================
-// LOGIN CONTROLLER
+// LOGIN CONTROLLER (SUPABASE)
 // ===============================
 exports.loginUser = async (req, res) => {
-    try {
-        const { identifier, password } = req.body;
+  try {
+    const { identifier, password } = req.body;
 
-        // identifier = user_code OR email
-        const sql = `SELECT * FROM tbl_users WHERE user_code = ? OR email = ?`;
-
-        const [rows] = await db.execute(sql, [identifier, identifier]);
-
-        // If no user found
-        if (rows.length === 0) {
-            return res.status(404).json({ message: "User not found." });
-        }
-
-        const user = rows[0];
-
-        // Compare passwords
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: "Invalid password." });
-        }
-
-        // Create token
-        const token = jwt.sign(
-            {
-                user_id: user.user_id,
-                user_code: user.user_code,
-                user_role: user.user_role,
-                user_fn: user.user_fn,
-                user_ln: user.user_ln
-            },
-            JWT_SECRET,
-            { expiresIn: "2h" }
-        );
-
-        res.json({
-            message: "Login successful.",
-            token,
-            role: user.user_role
-        });
-
-    } catch (error) {
-        console.error("Login Error:", error);
-        res.status(500).json({ message: "Server error during login." });
+    if (!identifier || !password) {
+      return res.status(400).json({ message: "Identifier and password are required." });
     }
+
+    // Find user by code OR email
+    const { data: users, error: findErr } = await supabase
+      .from("tbl_users")
+      .select("user_id, user_code, user_role, user_fn, user_ln, password")
+      .or(`user_code.eq.${identifier},email.eq.${identifier}`)
+      .limit(1);
+
+    if (findErr) throw findErr;
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const user = users[0];
+
+    // DEBUG: Check stored password
+    console.log("Supplied password:", password);
+    console.log("Stored hash:", user.password);
+
+    if (!user.password) {
+      return res.status(500).json({ message: "Password not set or inaccessible (RLS issue?)" });
+    }
+
+    // Compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials." });
+    }
+
+    // Create JWT token
+    const token = jwt.sign(
+      {
+        user_id: user.user_id,
+        user_code: user.user_code,
+        user_role: user.user_role,
+        user_fn: user.user_fn,
+        user_ln: user.user_ln,
+      },
+      JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.json({
+      message: "Login successful.",
+      token,
+      role: user.user_role,
+      user_id: user.user_id,
+      user_code: user.user_code,
+      user_fn: user.user_fn,
+      user_ln: user.user_ln,
+      email: user.email
+    });
+  } catch (error) {
+    console.error("Login Error:", error.message);
+    res.status(500).json({ message: "Server error during login." });
+  }
 };

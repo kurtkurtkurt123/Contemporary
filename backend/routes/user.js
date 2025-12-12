@@ -1,22 +1,21 @@
-// backend/routes/users.js
 const express = require("express");
 const router = express.Router();
-const db = require("../config/mysql.js");
-const { protect } = require("../Middleware/authmiddleware"); // Import Protection
+const db = require("../config/supabase.js");
+const { protect } = require("../Middleware/authmiddleware");
 
-// ==========================
-// GET ALL USERS (ADMIN ONLY)
-// ==========================
-router.get("/", protect(['Admin']), async (req, res) => {
+// GET ALL USERS — Admin only
+router.get("/", protect(['admin']), async (req, res) => {
     try {
-        // Tanging Admin lang ang makakarating dito
-        const [rows] = await db.execute("SELECT UserID, FirstName, LastName, Role, EmailAddress FROM Users");
-        res.json(rows);
+        const { data, error } = await db
+            .from("Users")
+            .select("UserID, FirstName, LastName, Role, EmailAddress");
+
+        if (error) return res.status(500).json({ message: error.message });
+
+        res.json(data);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
-
-// ... (Other routes like GET BY ID, PUT, DELETE are secured similarly if needed) ...
 
 module.exports = router;
