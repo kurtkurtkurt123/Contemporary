@@ -1,6 +1,13 @@
+// frontend/src/pages/admin/Students/EditStudents/editPage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// IDAGDAG ITO: API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+const getToken = () => localStorage.getItem('token'); 
+
 
 export default function StudentInfoModal({ isOpen, onClose, student, onUpdate }) {
   const [loading, setLoading] = useState(false);
@@ -35,11 +42,18 @@ export default function StudentInfoModal({ isOpen, onClose, student, onUpdate })
   }, [isOpen, student]);
 
   const handleSave = async () => {
+    const token = getToken();
+    if (!token) return toast.error("Login session expired.");
+
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/student/assign/${formData.studentId}`, {
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+      const res = await fetch(`${API_URL}/api/student/assign/${formData.studentId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify({ newRole: isStaff ? 'staff' : 'student' }),
       });
       if (!res.ok) throw new Error('Failed to update student role');
@@ -57,10 +71,16 @@ export default function StudentInfoModal({ isOpen, onClose, student, onUpdate })
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this student?')) return;
+    const token = getToken();
+    if (!token) return toast.error("Login session expired.");
 
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/student/delete/${formData.studentId}`, { method: 'DELETE' });
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+      const res = await fetch(`${API_URL}/api/student/delete/${formData.studentId}`, { 
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (!res.ok) throw new Error('Failed to delete student');
 
       toast.success('Student deleted successfully!');

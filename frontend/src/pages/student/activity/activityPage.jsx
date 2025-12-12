@@ -1,9 +1,15 @@
+// frontend/src/pages/student/activity/activityPage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
 import NavBar from '../../../components/public/NavBar';
 import { useAuth } from '../../../context/AuthContext';
 import supabase from '../../../../config/supabaseClient';
 import toast from 'react-hot-toast';
+
+// IDAGDAG ITO: API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+const getToken = () => localStorage.getItem('token'); 
 
 export default function ActivityCards() {
     const { user, logout } = useAuth();
@@ -29,8 +35,15 @@ export default function ActivityCards() {
                 setLoading(false);
                 return;
             }
+            const token = getToken(); // Kumuha ng token
+            if (!token) return toast.error("Login session expired.");
+
             try {
-                const res = await fetch(`http://localhost:5000/api/activity/get?student_id=${user.user_id}`);
+                // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+                const res = await fetch(`${API_URL}/api/activity/get?student_id=${user.user_id}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 const result = await res.json();
                 if (result.success) setActivities(result.data);
                 else toast.error(result.message || "Failed to fetch activities.");
@@ -101,6 +114,8 @@ export default function ActivityCards() {
         if (!file) return toast.error("Please select a file.");
 
         setSubmitLoading(true);
+        const token = getToken(); // Kumuha ng token
+        if (!token) return toast.error("Login session expired.");
 
         try {
             // Generate a unique file path in Supabase "materials" bucket
@@ -115,14 +130,18 @@ export default function ActivityCards() {
             if (uploadError) throw uploadError;
 
             // POST to backend using material_id
-            const res = await fetch("http://localhost:5000/api/activity/create", {
+            // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+            const res = await fetch(`${API_URL}/api/activity/create`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${token}` // IDAGDAG ANG HEADER
+                },
                 body: JSON.stringify({
                     material_id: selectedMaterial.id,  // matches backend
                     user_id: user.user_id,
                     task_name: selectedMaterial.title,
-                    task_desc: selectedMaterial.description,
+                    // task_desc is not used by backend/Controller/activityController.js:createActivity
                     task_file: filePath,
                     remarks: comments
                 })
@@ -141,6 +160,8 @@ export default function ActivityCards() {
                 setModalOpen(false);
                 setFile(null);
                 setComments('');
+                // I-refresh ang activities
+                fetchActivities();
             } else {
                 toast.error(result.message || "Submission failed.");
             }

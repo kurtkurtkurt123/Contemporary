@@ -1,3 +1,5 @@
+// frontend/src/pages/admin/Tasks/page.jsx
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   ArrowDownTrayIcon,
@@ -12,6 +14,10 @@ import StudentTaskModal from './EditTask/editPage';
 import * as XLSX from "xlsx";
 
 
+// IDAGDAG ITO: API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+const getToken = () => localStorage.getItem('token'); 
+
 const TaskSubmissionList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({ task: 'All', section: 'All', date: '' });
@@ -25,8 +31,18 @@ const TaskSubmissionList = () => {
 
   // Fetch tasks from API
   const fetchTasks = async () => {
+    const token = getToken(); // Kumuha ng Token
+    if (!token) {
+        console.warn("No token found. Cannot fetch tasks.");
+        return;
+    }
+
     try {
-      const res = await fetch('http://localhost:5000/api/task/get');
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+      const res = await fetch(`${API_URL}/api/task/get`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const result = await res.json();
       if (result.success) {
         setTasks(result.data);
@@ -44,12 +60,12 @@ const TaskSubmissionList = () => {
   }, []);
 
   const uniqueSections = useMemo(
-    () => ['All', ...new Set(tasks.map(item => item.stud_course))],
+    () => ['All', ...new Set(tasks.map(item => item.courseSection))], // Use courseSection
     [tasks]
   );
 
   const uniqueTasks = useMemo(
-    () => ['All', ...new Set(tasks.map(item => item.taskSubmitted))],
+    () => ['All', ...new Set(tasks.map(item => item.materialFileName))], // Use materialFileName
     [tasks]
   );
 
@@ -86,8 +102,8 @@ const TaskSubmissionList = () => {
       );
       if (!searchMatch) return false;
 
-      if (filters.section !== 'All' && row.stud_course !== filters.section) return false;
-      if (filters.task !== 'All' && row.taskSubmitted !== filters.task) return false;
+      if (filters.section !== 'All' && row.courseSection !== filters.section) return false; // Use courseSection
+      if (filters.task !== 'All' && row.materialFileName !== filters.task) return false; // Use materialFileName
       if (filters.date && !row.dateSubmitted?.includes(filters.date)) return false;
 
       return true;
@@ -235,7 +251,7 @@ const TaskSubmissionList = () => {
                     <td className="px-6 py-4 text-sm">{row.courseSection}</td>
 
                     <td className="px-6 py-4 text-sm">
-                      {new Date(row.dateSubmitted).toLocaleString()}
+                      {row.dateSubmitted ? new Date(row.dateSubmitted).toLocaleString() : 'N/A'}
                     </td>
 
                     <td className={`px-6 py-4 text-sm ${getStatusStyle(row.status).className}`}>
@@ -299,6 +315,7 @@ const TaskSubmissionList = () => {
           onClose={() => {
             setIsModalOpen(false);
             setSelectedTaskId(null);
+            fetchTasks(); // I-refresh ang listahan pagkatapos mag-close ng modal
           }}
         />
       )}

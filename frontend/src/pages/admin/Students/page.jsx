@@ -1,3 +1,5 @@
+// frontend/src/pages/admin/Students/page.jsx
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   MagnifyingGlassIcon as SearchIcon,
@@ -12,6 +14,10 @@ import StudentInfoModal from './EditStudents/editPage';
 import toast from 'react-hot-toast';
 import * as XLSX from "xlsx";
 
+// IDAGDAG ITO: API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+const getToken = () => localStorage.getItem('token'); 
+
 export default function StudentListTable() {
   const { user, logout } = useAuth();
 
@@ -25,13 +31,20 @@ export default function StudentListTable() {
 
   // Fetch students and normalize data
   const fetchStudents = async () => {
+    const token = getToken();
+    if (!token) return toast.error("Login session expired.");
+
     try {
-      const res = await fetch('http://localhost:5000/api/student/get');
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+      const res = await fetch(`${API_URL}/api/student/get`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+      });
       const result = await res.json();
 
       if (result.success) {
         const mappedStudents = result.data.map(s => ({
-          id: s.id || "",
+          id: s.user_code || "", // Gamitin ang user_code
           name: s.name || "",
           email: s.email || "",
           course: s.course || "",
@@ -78,8 +91,8 @@ export default function StudentListTable() {
 
   const pagesArray = Array.from({ length: totalPages }, (_, i) => i + 1);
 
-  const handleEllipsisClick = (studentId) => {
-    const student = students.find(s => s.id === studentId);
+  const handleEllipsisClick = (studentCode) => { // Gumamit ng user_code (id)
+    const student = students.find(s => s.id === studentCode);
     if (!student) return toast.error('Student not found');
 
     setSelectedStudent(student);
@@ -176,7 +189,7 @@ const exportToExcel = () => {
             {/* Export Button */}
             <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
               <button
-                onClick={() => alert("Export List clicked!")}
+                onClick={exportToExcel} // Changed to use exportToExcel
                 className="bg-[#4A56A3] hover:bg-[#5a64b8] px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition"
               >
                 <ArrowDownTrayIcon className="h-5" /> Export List
@@ -253,7 +266,7 @@ const exportToExcel = () => {
       {selectedStudent && (
         <StudentInfoModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {setIsModalOpen(false); setSelectedStudent(null)}}
           student={selectedStudent}
           onUpdate={fetchStudents} // refresh table after edits
         />

@@ -1,6 +1,12 @@
+// frontend/src/pages/admin/Tasks/EditTask/editPage.jsx
+
 import React, { useState, useEffect } from "react";
 import { X, Save, FileText, BookOpen, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";
+
+// IDAGDAG ITO: API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+const getToken = () => localStorage.getItem('token'); 
 
 export default function StudentTaskModal({ taskId, isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
@@ -13,9 +19,16 @@ export default function StudentTaskModal({ taskId, isOpen, onClose }) {
 
   const fetchTask = async () => {
     if (!taskId) return;
+    const token = getToken(); // Kumuha ng token
+    if (!token) return toast.error("Login session expired.");
+
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:5000/api/task/${taskId}`);
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+      const res = await fetch(`${API_URL}/api/task/${taskId}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const { success, data, message } = await res.json();
 
       if (!success) return toast.error(message || "Failed to fetch task");
@@ -59,13 +72,19 @@ export default function StudentTaskModal({ taskId, isOpen, onClose }) {
 
   const handleSave = async () => {
     if (!task || remarksError) return toast.error("Fix errors before saving.");
+    const token = getToken(); // Kumuha ng token
+    if (!token) return toast.error("Login session expired.");
 
     try {
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
       const res = await fetch(
-        `http://localhost:5000/api/task/score/${task.task_id}`,
+        `${API_URL}/api/task/score/${task.task_id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            'Authorization': `Bearer ${token}` // IDAGDAG ANG HEADER
+          },
           body: JSON.stringify({
             remarks: Number(remarks),
             comments: task.comments || "",

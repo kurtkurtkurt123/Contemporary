@@ -1,6 +1,12 @@
+// frontend/src/pages/admin/Materials/EditMaterials/editPage.jsx
+
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import toast from "react-hot-toast";
+
+// IDAGDAG ITO: API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+const getToken = () => localStorage.getItem('token'); 
 
 const EditMaterial = ({ isOpen, onClose, id }) => {
   const [formData, setFormData] = useState({
@@ -13,15 +19,21 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
     newFile: null,
   });
 
-  const [previewFile, setPreviewFile] = useState(""); // New: preview URL
+  const [previewFile, setPreviewFile] = useState(""); 
 
   // Fetch single material
   useEffect(() => {
     if (!isOpen || !id) return;
+    const token = getToken();
+    if (!token) return toast.error("Login session expired.");
 
     const fetchMaterial = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/material/${id}`);
+        // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+        const res = await fetch(`${API_URL}/api/material/${id}`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         const result = await res.json();
         if (!result.success) {
           toast.error("Failed to load material");
@@ -65,6 +77,9 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
 
   // Submit update
   const handleSubmit = async () => {
+    const token = getToken();
+    if (!token) return toast.error("Login session expired.");
+
     try {
       const payload = new FormData();
       payload.append("name", formData.name);
@@ -75,8 +90,10 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
 
       if (formData.newFile) payload.append("file", formData.newFile);
 
-      const res = await fetch(`http://localhost:5000/api/material/${id}`, {
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+      const res = await fetch(`${API_URL}/api/material/${id}`, {
         method: "PUT",
+        headers: { 'Authorization': `Bearer ${token}` }, // IDAGDAG ANG HEADER
         body: payload,
       });
 
@@ -97,10 +114,14 @@ const EditMaterial = ({ isOpen, onClose, id }) => {
   // Delete material
   const handleDelete = async () => {
     if (!confirm("Delete this material?")) return;
+    const token = getToken();
+    if (!token) return toast.error("Login session expired.");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/material/${id}`, {
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+      const res = await fetch(`${API_URL}/api/material/${id}`, {
         method: "DELETE",
+        headers: { 'Authorization': `Bearer ${token}` } // IDAGDAG ANG HEADER
       });
       const result = await res.json();
       if (result.success) {

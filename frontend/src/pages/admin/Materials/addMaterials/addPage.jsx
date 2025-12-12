@@ -1,7 +1,13 @@
+// frontend/src/pages/admin/Materials/addMaterials/addPage.jsx
+
 import React, { useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import supabase from "../../../../../config/supabaseClient";
+
+// IDAGDAG ITO: API URL
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+const getToken = () => localStorage.getItem('token'); 
 
 const AddMaterial = ({ isOpen, onClose }) => {
   const [name, setName] = useState("");
@@ -34,6 +40,8 @@ const AddMaterial = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) return toast.error("Please select a PDF file");
+    const token = getToken(); // Kumuha ng token
+    if (!token) return toast.error("Login session expired.");
 
     setIsSubmitting(true);
 
@@ -54,9 +62,13 @@ const AddMaterial = ({ isOpen, onClose }) => {
 
       const fileUrl = publicData.publicUrl;
 
-      const res = await fetch("http://localhost:5000/api/material/create", {
+      // I-UPDATE ANG FETCH URL at IDAGDAG ANG HEADER
+      const res = await fetch(`${API_URL}/api/material/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}` // IDAGDAG ANG HEADER
+        },
         body: JSON.stringify({
           name,
           description,
