@@ -16,10 +16,7 @@ app.use("/api/users", require("./routes/user"));
 app.use("/api/student", require("./routes/students"));
 app.use("/api/material", require("./routes/materials"));
 app.use("/api/task", require("./routes/tasks"));
-<<<<<<< HEAD
-=======
 app.use("/api/activity", require("./routes/activities"));
->>>>>>> test/supabase-migration
 
 const PORT = process.env.PORT || 5000;
 

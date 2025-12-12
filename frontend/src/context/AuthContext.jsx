@@ -38,13 +38,8 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ identifier, password }),
       });
 
-<<<<<<< HEAD
-            const data = await response.json();
-            console.log(data);
-=======
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Login failed");
->>>>>>> test/supabase-migration
 
       // Use the returned user info directly
       const userData = {
@@ -99,13 +94,6 @@ export const AuthProvider = ({ children }) => {
 
       const data = await res.json();
 
-<<<<<<< HEAD
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
-=======
       if (!res.ok) throw new Error(data.message || "Registration failed");
 
       toast.success("Registration successful! Your code: " + data.user_code);
@@ -128,12 +116,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
->>>>>>> test/supabase-migration
 };
 
 // Custom hook
 export const useAuth = () => useContext(AuthContext);
-<<<<<<< HEAD
-
-=======
->>>>>>> test/supabase-migration

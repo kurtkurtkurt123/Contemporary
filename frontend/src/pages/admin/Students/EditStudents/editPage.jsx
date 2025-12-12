@@ -20,18 +20,6 @@ export default function StudentInfoModal({ isOpen, onClose, student, onUpdate })
     setLoading(true);
     const { id, name, email, course, registeredDate, role } = student;
 
-<<<<<<< HEAD
-    setFormData({
-      studentId: id || '',
-      name: name || '',
-      email: email || '',
-      courseSection: course || '',
-      dateRegistered: registeredDate ? new Date(registeredDate).toLocaleDateString() : '',
-      role: role || 'Student',
-    });
-
-    setIsStaff(role?.toLowerCase() === 'staff');
-=======
     setIsStaff(role?.toLowerCase() === 'staff');
     setFormData({
       studentId: id,
@@ -42,7 +30,6 @@ export default function StudentInfoModal({ isOpen, onClose, student, onUpdate })
       role
     });
 
->>>>>>> test/supabase-migration
 
     setLoading(false);
   }, [isOpen, student]);

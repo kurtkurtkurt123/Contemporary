@@ -5,16 +5,7 @@ import toast from 'react-hot-toast';
 import AddMaterial from './addMaterials/addPage';
 import EditMaterial from './EditMaterials/editPage';
 import jsPDF from "jspdf";
-<<<<<<< HEAD
-import "jspdf-autotable";
-
-import { 
-  MagnifyingGlassIcon as SearchIcon, 
-  ArrowDownTrayIcon, 
-  EllipsisVerticalIcon, 
-  PlusIcon 
-=======
-import * as XLSX from "xlsx";      // NEW: XLSX import
+import * as XLSX from "xlsx"; // NEW: XLSX import
 import "jspdf-autotable";
 
 import {
@@ -22,55 +13,46 @@ import {
   ArrowDownTrayIcon,
   EllipsisVerticalIcon,
   PlusIcon
->>>>>>> test/supabase-migration
 } from '@heroicons/react/24/outline';
 
 const MaterialsTable = () => {
   const { user, logout } = useAuth();
   const [materials, setMaterials] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-<<<<<<< HEAD
-  const [filters, setFilters] = useState({ type: 'All' });
-=======
   const [filters, setFilters] = useState({ 
-  type: 'All',
-  category: 'All'    // NEW: Lesson / Activity filter
-});
->>>>>>> test/supabase-migration
+    type: 'All',
+    category: 'All'    // Lesson / Activity filter
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editMaterialId, setEditMaterialId] = useState(null); // track which material to edit
   const itemsPerPage = 12;
 
-<<<<<<< HEAD
-=======
-// NEW: Export XLSX
-const handleExportXLSX = () => {
-  try {
-    // Prepare data for Excel (export filtered results, not only current page)
-    const exportData = filteredData.map(item => ({
-      "Item Code": item.item_code,
-      "Item Name": item.item_name,
-      "Item Type": item.item_type,
-      "Deadline": item.date_deadline ? new Date(item.date_deadline).toLocaleString() : "-",
-      "Item Score": item.item_grade
-    }));
+  // NEW: Export XLSX
+  const handleExportXLSX = () => {
+    try {
+      // Prepare data for Excel (export filtered results, not only current page)
+      const exportData = filteredData.map(item => ({
+        "Item Code": item.item_code,
+        "Item Name": item.item_name,
+        "Item Type": item.item_type,
+        "Deadline": item.date_deadline ? new Date(item.date_deadline).toLocaleString() : "-",
+        "Item Score": item.item_grade
+      }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Materials");
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Materials");
 
-    XLSX.writeFile(workbook, "materials_list.xlsx");
-    toast.success("XLSX Exported Successfully!");
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to export XLSX.");
-  }
-};
+      XLSX.writeFile(workbook, "materials_list.xlsx");
+      toast.success("XLSX Exported Successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to export XLSX.");
+    }
+  };
 
-
->>>>>>> test/supabase-migration
   // Fetch materials from API
   const fetchMaterials = async () => {
     try {
@@ -95,38 +77,30 @@ const handleExportXLSX = () => {
   const uniqueTypes = useMemo(() => ['All', ...new Set(materials.map(item => item.item_type || 'File'))], [materials]);
 
   // Filtered data
-<<<<<<< HEAD
   const filteredData = useMemo(() => {
     return materials.filter(item => {
+      // 1. Search term filter
       const matchesSearch = Object.values(item).some(value =>
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       );
+
       if (!matchesSearch) return false;
-      if (filters.type !== 'All' && item.item_type !== filters.type) return false;
+
+      // 2. Type filter
+      if (filters.type !== "All" && item.item_type !== filters.type) return false;
+
+      // 3. Category filter (Logic combined from the conflicting lines)
+      if (filters.category === "Lesson") {
+        // Lesson = Item Score is 0
+        if (item.item_grade != 0) return false;
+      } else if (filters.category === "Activity") {
+        // Activity = Item Score is NOT 0 (i.e., has a score)
+        if (item.item_grade == 0) return false;
+      }
+
       return true;
     });
   }, [materials, searchTerm, filters]);
-=======
-const filteredData = useMemo(() => {
-  return materials.filter(item => {
-
-    const matchesSearch = Object.values(item).some(value =>
-      String(value).toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    if (!matchesSearch) return false;
-
-    // Type filter
-    if (filters.type !== "All" && item.item_type !== filters.type) return false;
-
-    // Category filter
-    if (filters.category === "Lesson" && item.item_grade != 0) return false;
-    if (filters.category === "Activity" && item.item_grade == 0) return false;
-
-    return true;
-  });
-}, [materials, searchTerm, filters]);
->>>>>>> test/supabase-migration
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -153,42 +127,6 @@ const filteredData = useMemo(() => {
     setEditMaterialId(null);
     fetchMaterials();
   };
-
-<<<<<<< HEAD
-  // Export PDF
-  const handleExportPDF = () => {
-    if (materials.length === 0) {
-      toast.error('No materials to export.');
-      return;
-    }
-
-    const doc = new jsPDF();
-    const columns = ['Item Code', 'Item Name', 'Date Uploaded', 'Item Type', 'Deadline', 'Item Score'];
-    const rows = materials.map(item => [
-      item.item_code,
-      item.item_name,
-      item.date_uploaded ? new Date(item.date_uploaded).toLocaleString() : '',
-      item.item_type,
-      item.date_deadline ? new Date(item.date_deadline).toLocaleString() : '',
-      item.item_grade ?? ''
-    ]);
-
-    doc.setFontSize(18);
-    doc.text('Materials List', 14, 22);
-
-    doc.autoTable({
-      startY: 30,
-      head: [columns],
-      body: rows,
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [60, 70, 123], textColor: 255 },
-    });
-
-    doc.save(`materials_list_${new Date().toISOString()}.pdf`);
-  };
-=======
-
->>>>>>> test/supabase-migration
 
   // Print
   const handlePrint = () => {
@@ -226,20 +164,12 @@ const filteredData = useMemo(() => {
               <div className="relative">
                 <select
                   value={filters.type}
-<<<<<<< HEAD
-                  onChange={(e) => { setFilters({ type: e.target.value }); setCurrentPage(1); }}
-=======
                   onChange={(e) => { setFilters({ ...filters, type: e.target.value }); setCurrentPage(1); }}
->>>>>>> test/supabase-migration
                   className="bg-[#4A56A3] text-white p-2 rounded-lg text-sm shadow outline-none cursor-pointer"
                 >
                   {uniqueTypes.map(type => <option key={type} value={type}>{type}</option>)}
                 </select>
               </div>
-<<<<<<< HEAD
-            </div>
-
-=======
 
               <div className="relative">
                 <select
@@ -253,10 +183,7 @@ const filteredData = useMemo(() => {
                 </select>
               </div>
             </div>
-
-          
-
->>>>>>> test/supabase-migration
+            
             <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
               <button
                 onClick={handleAddMaterial}
@@ -271,16 +198,13 @@ const filteredData = useMemo(() => {
               >
                 <ArrowDownTrayIcon className="h-5" /> Export PDF
               </button>
-<<<<<<< HEAD
-=======
               
               <button
                 onClick={handleExportXLSX}
                 className="bg-[#4A56A3] hover:bg-[#5a64b8] px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition"
-                >
+              >
                 <ArrowDownTrayIcon className="h-5" /> Export XLSX
               </button>
->>>>>>> test/supabase-migration
             </div>
           </div>
         </div>
@@ -290,11 +214,7 @@ const filteredData = useMemo(() => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-[#3C467B] text-white">
               <tr>
-<<<<<<< HEAD
-                {['Item Code', 'Item Name', 'Date Uploaded', 'Item Type', 'Deadline', 'Item Score', ''].map(header => (
-=======
-                {['Item Code', 'Item Name',  'Item Type', 'Deadline', 'Item Score', ''].map(header => (
->>>>>>> test/supabase-migration
+                {['Item Code', 'Item Name', 'Item Type', 'Deadline', 'Item Score', ''].map(header => (
                   <th
                     key={header}
                     className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${header === '' ? 'text-right' : ''}`}
@@ -308,7 +228,7 @@ const filteredData = useMemo(() => {
             <tbody className="bg-white divide-y divide-gray-200">
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-500 text-base">
+                  <td colSpan={6} className="text-center py-10 text-gray-500 text-base">
                     No results match the current search or filters.
                   </td>
                 </tr>
@@ -319,10 +239,6 @@ const filteredData = useMemo(() => {
                   >
                     <td className="px-6 py-4 text-left text-md font-medium">{item.item_code}</td>
                     <td className="px-6 py-4 text-left text-md">{item.item_name}</td>
-<<<<<<< HEAD
-                    <td className="px-6 py-4 text-left text-md">{new Date(item.date_uploaded).toLocaleString()}</td>
-=======
->>>>>>> test/supabase-migration
                     <td className="px-6 py-4 text-left text-md">{item.item_type}</td>
                     <td className="px-6 py-4 text-left text-md">{item.date_deadline ? new Date(item.date_deadline).toLocaleString() : '-'}</td>
                     <td className="px-6 py-4 text-left text-md">{item.item_grade}</td>
