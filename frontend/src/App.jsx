@@ -4,17 +4,19 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute"; 
 
 // Imports ng Pages - KELANGAN TUMUGMA SA FILE NAME (CASE-SENSITIVE!)
-import Login from "./pages/LoginPage.jsx";       
-import Register from "./pages/register.jsx"; // ✅ FIX: Assumes file is renamed to RegisterPage.jsx
+import Login from "./pages/login.jsx";       
+import Register from "./pages/register.jsx"; 
 import Unauthorized from "./pages/Unauthorized.jsx"; 
 import Home from "./pages/Home.jsx"; 
-import AboutPage from "./pages/AboutPage.jsx"; 
-import LessonPage from "./pages/LessonPage.jsx"; 
-// Note: Syllabus removed
+// REMOVED: import AboutPage from "./pages/AboutPage.jsx"; 
+import LessonPage from "./pages/LessonsPage.jsx"; 
+import ActivitiesPage from "./pages/ActivitiesPage.jsx"; 
+import StudentDashboard from "./pages/StudentDashboard.jsx"; 
 
 // Placeholder Components
 const AdminDashboard = () => <h1>Admin Dashboard Placeholder</h1>;
 const InstructorDashboard = () => <h1>InstructorDashboard Placeholder</h1>;
+// REMOVED: AboutPage placeholder definition
 
 
 function App() {
@@ -49,7 +51,7 @@ function AppContent() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/home" element={<Home />} />
-            <Route path="/about" element={<AboutPage />} /> 
+            {/* REMOVED: <Route path="/about" element={<AboutPage />} /> */} 
 
             {/* --- PROTECTED HUB ROUTE (CRITICAL) --- */}
             <Route 
@@ -57,9 +59,10 @@ function AppContent() {
                 element={<ProtectedRoute allowedRoles={['Admin', 'Instructor', 'Student']}><Home /></ProtectedRoute>} 
             />
 
-            {/* --- PROTECTED SPECIFIC ROUTES --- */}
+            {/* --- PROTECTED SPECIFIC ROUTES (STUDENT) --- */}
+            <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['Student']}><StudentDashboard /></ProtectedRoute>} />
             <Route path="/lessons" element={<ProtectedRoute allowedRoles={['Student']}><LessonPage /></ProtectedRoute>} />
-            {/* Note: Syllabus route removed */}
+            <Route path="/activities" element={<ProtectedRoute allowedRoles={['Student']}><ActivitiesPage /></ProtectedRoute>} />
 
             {/* Admin Specific Routes */}
             <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['Admin']}><AdminDashboard /></ProtectedRoute>} /> 

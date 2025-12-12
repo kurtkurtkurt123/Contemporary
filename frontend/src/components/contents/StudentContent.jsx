@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext'; // ✅ CORRECT PATH: Akyat dalawang folder
+import { useAuth } from '../../context/AuthContext'; // ✅ Kinuha mula sa orihinal
 import toast from 'react-hot-toast';
 import { BookOpen, BarChart3, CheckCircle } from "lucide-react";
 
@@ -74,7 +74,7 @@ const StudentContent = () => {
                 <h2 className="text-xl font-bold">Performance Summary</h2>
 
                 <div className="bg-white p-6 rounded-xl shadow-md border text-center">
-                    <h3 className="text-gray-500 text-sm mb-2">Average Grade</h3>
+                    <h3 className="text-sm text-gray-500 mb-2">Average Grade</h3>
                     <h1 className="text-5xl font-bold text-green-600">92</h1>
                 </div>
 

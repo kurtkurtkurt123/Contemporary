@@ -1,36 +1,48 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-// ✅ FINAL PATH: Umakyat ng isang folder galing /components/ para makita ang /context/
 import { useAuth } from "../context/AuthContext"; 
 
+// --- Inside ProtectedRoute.js ---
+
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  // Kunin ang lahat ng state na kailangan
   const { user, token, isAuthReady } = useAuth();
   const location = useLocation();
 
-  // 1. Loading State: Haharangin ang rendering habang nagche-check ng token
+  // 1. Loading State Check (Must be first)
   if (!isAuthReady) {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <h1 className="text-2xl text-gray-600">Checking credentials...</h1>
+             <h1 className="text-2xl text-gray-600">Checking credentials...</h1>
         </div>
     );
   }
   
-  // 2. Check kung naka-login
-  if (!token) {
-    // Kung walang token, balik sa Login
+  // 2. Authentication Check (CRITICAL: Check for both token AND user)
+  if (!token || !user) { 
+    // If no token or no user data, redirect to Login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+  
+  // 3. Role Check (This block ONLY runs if 'user' and 'token' exist)
+  if (allowedRoles) {
+  
+    const userRole = user.Role || user.user_role || user.UserType; 
 
-  // 3. Role Check
-  // Tiyakin na ang spelling at casing ng Role ay tugma sa JWT payload ('Admin', 'Student', etc.)
-  if (user && allowedRoles && !allowedRoles.includes(user.Role)) {
-    // Kung mali ang role, redirect sa Unauthorized
-    return <Navigate to="/unauthorized" replace />; 
+    if (!userRole) {
+         console.error("User object is valid but is missing the role property. Access denied.");
+         return <Navigate to="/unauthorized" replace />; 
+    }
+
+    const normalizedUserRole = String(userRole).toLowerCase();
+    const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
+    
+    if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
+      console.warn(`Access Denied: User role '${userRole}' not in [${allowedRoles}]`);
+      return <Navigate to="/unauthorized" replace />; 
+    }
   }
 
-  // 4. Access granted
+  // Access granted
   return children;
 };
 

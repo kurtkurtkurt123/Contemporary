@@ -71,6 +71,7 @@ export const AuthProvider = ({ children }) => {
             });
 
             const data = await response.json();
+            console.log(data);
 
             if (!response.ok) {
                 throw new Error(data.message || "Login failed");
@@ -116,7 +117,6 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            <Toaster position="top-right" />
             {children}
         </AuthContext.Provider>
     );
@@ -127,4 +127,3 @@ export const AuthProvider = ({ children }) => {
 // =====================================================
 export const useAuth = () => useContext(AuthContext);
 
-export default AuthContext;
