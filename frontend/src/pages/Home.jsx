@@ -57,7 +57,7 @@ const Home = () => {
                         Welcome, {firstName}!
                     </h1>
                     <p className="text-xl font-light opacity-90 mb-6 animate-fade-in delay-200">
-                        You are logged in as a **{roleDisplay}**. This is your global learning hub.
+                        You are logged in as a ({roleDisplay}). This is your global learning hub.
                     </p>
                     <button onClick={logout} className="mt-4 bg-white text-[#3C467B] px-8 py-3 rounded-full hover:bg-gray-200 transition font-semibold shadow-lg">
                         {roleDisplay === 'Student' ? 'Continue Learning' : 'Start Managing'}
@@ -90,9 +90,9 @@ const Home = () => {
                         <div>
                             <h3 className="text-xl font-semibold mb-2 text-[#4A56A3]">Key Areas of Study</h3>
                             <ul className="list-disc list-inside text-gray-600 space-y-2 pl-4">
-                                <li>**Global Economy:** Trade, finance, and inequality.</li>
-                                <li>**Global Politics:** International relations, conflicts, and cooperation.</li>
-                                <li>**Cultural Flows:** Migration, media, and identity.</li>
+                                <li> Global Economy: Trade, finance, and inequality.</li>
+                                <li> Global Politics: International relations, conflicts, and cooperation.</li>
+                                <li> Cultural Flows: Migration, media, and identity.</li>
                             </ul>
                         </div>
                     </div>
