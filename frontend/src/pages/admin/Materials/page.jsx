@@ -58,9 +58,25 @@ const MaterialsTable = () => {
 
   // Fetch materials from API
   const fetchMaterials = async () => {
+    // IDAGDAG ITO: Kunin ang token mula sa local storage
+    const token = localStorage.getItem('token'); 
+    
+    // Kung walang token, huwag mag-fetch
+    if (!token) {
+        // Maaari mo ring i-toast ang error na kailangan muna mag-login
+        console.warn("No token found. Cannot fetch materials.");
+        return;
+    }
+
     try {
-      // API CALL UPDATED: Gumagamit na ng API_URL variable
-      const res = await fetch(`${API_URL}/api/material/get`);
+      // API CALL UPDATED: Idagdag ang Authorization Header
+      const res = await fetch(`${API_URL}/api/material/get`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}` // IDAGDAG ANG LINYA NA ITO
+        }
+      });
+      
       const result = await res.json();
       if (result.success) {
         setMaterials(result.data);
