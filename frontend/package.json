@@ -11,13 +11,9 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
-<<<<<<< HEAD
-    "axios": "^1.13.2",
-=======
     "@supabase/supabase-js": "^2.87.1",
     "axios": "^1.13.2",
     "dotenv": "^17.2.3",
->>>>>>> test/supabase-migration
     "heroicons": "^2.2.0",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
@@ -27,16 +23,11 @@
     "react-doc-viewer": "^0.1.15",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.6.0",
-<<<<<<< HEAD
-    "react-router-dom": "^7.10.1",
-    "reactjs-file-preview": "^1.0.11"
-=======
     "react-pdf": "^10.2.0",
     "react-router-dom": "^7.10.1",
     "reactjs-file-preview": "^1.0.11",
     "uuid": "^13.0.0",
     "xlsx": "^0.18.5"
->>>>>>> test/supabase-migration
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
